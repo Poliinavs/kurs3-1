@@ -2,9 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <title>Получение имени с сервера</title>
 </head>
 <body>
-$END$
+<h1>Имя получено с сервера:</h1>
+<p id="namePlaceholder">Здесь будет отображено имя</p>
+
+<button id="fetchName">Получить имя</button>
+
+<script>
+  document.getElementById('fetchName').addEventListener('click', function() {
+    var xhr = new XMLHttpRequest();
+
+    xhr.open('GET', 'http://localhost:5000/api/name', true);
+
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+
+          var response = xhr.responseText;
+          document.getElementById('namePlaceholder').textContent = response;
+
+      }
+    };
+
+    xhr.send();
+  });
+</script>
 </body>
 </html>
+
+
+
