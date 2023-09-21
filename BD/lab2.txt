@@ -1,0 +1,127 @@
+CREATE TABLESPACE TS_APV
+DATAFILE 'C:\lab\TS_APV.dbf'
+    SIZE 7M
+    AUTOEXTEND ON NEXT 5M
+    MAXSIZE 20M;
+--2
+CREATE TEMPORARY TABLESPACE TS_APV_TEMP
+TEMPFILE 'TS_APV_TEMP.dbf'
+    SIZE 5M
+    AUTOEXTEND ON NEXT 3M
+    MAXSIZE 30M;
+--3.1 список всех табличных пространств:
+SELECT tablespace_name
+FROM dba_tablespaces
+Union
+SELECT tablespace_name
+FROM dba_temp_files;
+
+--3.2 список всех файлов
+SELECT tablespace_name, file_name
+FROM dba_data_files
+Union
+SELECT tablespace_name, file_name
+FROM dba_temp_files;
+--временные табличные пространства и файлы
+
+
+--4 
+CREATE ROLE RL_APVCORE;
+--разрешения
+
+
+ GRANT CREATE SESSION,
+              CREATE ANY TABLE,
+              CREATE ANY VIEW,
+              CREATE PROCEDURE TO RL_APVCORE;
+        GRANT DROP ANY TABLE TO RL_APVCORE;
+        GRANT DROP ANY VIEW TO RL_APVCORE;
+        GRANT DROP ANY PROCEDURE TO RL_APVCORE;
+
+drop role RL_APVCORE;
+----------
+--5 роль в словаре 
+SELECT * 
+FROM dba_roles
+WHERE role = 'RL_APVCORE';
+--системные привилегии
+select * 
+from dba_sys_privs 
+where Grantee='RL_APVCORE';
+
+--6
+CREATE PROFILE PF_APVCORE LIMIT
+    FAILED_LOGIN_ATTEMPTS 7 --КОЛИЧ ПОПЫТОК ВХОДА
+    PASSWORD_LIFE_TIME 180
+    SESSIONS_PER_USER 3 -- КОЛИЧЕСТВО СЕССИЙ ДЛЯ ПОЛЬЗОВАТЕЛЯ
+    PASSWORD_REUSE_TIME 10 --ЧЕРЕЗ СКОЛЬКО ДНЕЙ МОЖНО ПОВТОРИТЬ ПАРОЛЬ
+    CONNECT_TIME 5 --ВРЕМЯ СОЕДИНЕНИЯ, МИНУТ 
+    IDLE_TIME 30 -- КОЛИЧЕСТВО МИНУТ ПРОСТОЯ
+    PASSWORD_LOCK_TIME 1 --КОЛИЧ ДНЕЙ БЛОКИРОВКИ ПОСЛЕ ОШИБОК
+    PASSWORD_GRACE_TIME DEFAULT; --КОЛИЧ ДНЕЙ ПРЕДЕПРЕЖДЕНИЙ О СМЕНЕ ПАРОЛЯ
+--7 ВСЕ ПРОФ
+SELECT profile FROM dba_profiles;
+--всех параметров профиля
+SELECT *
+FROM dba_profiles
+WHERE profile = 'PF_APVCORE';
+--значений всех параметров профиля "DEFAULT"
+SELECT *
+FROM dba_profiles
+WHERE profile = 'DEFAULT';
+--8
+
+CREATE USER APVCORE
+  IDENTIFIED BY 1111
+  DEFAULT TABLESPACE TS_APV
+  TEMPORARY TABLESPACE TS_APV_TEMP
+  PROFILE PF_APVCORE
+  ACCOUNT UNLOCK
+  PASSWORD EXPIRE;
+  
+  Drop USER APVCORE
+
+grant RL_APVCORE to APVCORE
+revoke RL_APVCORE to APVCORE
+--#9
+ALTER USER APVCORE QUOTA unlimited  ON TS_APV
+       -- select * from dba_role_privs connect by prior granted_role = grantee start with grantee = '&APVCORE' order by 1,2,3;
+        GRANT RESOURCE to APVCORE;
+--10
+
+CREATE TABLE example_table (
+  id NUMBER(5) PRIMARY KEY,
+  name VARCHAR2(50),
+  description VARCHAR2(200)
+);
+insert into example_table values(1, 'ff', 'disk')
+
+CREATE VIEW example_view AS
+SELECT id, name
+FROM example_table;
+--11 OFFLINE
+CREATE TABLESPACE APV_QDATA
+DATAFILE 'APV_QDATA.dbf'
+SIZE 10M
+AUTOEXTEND ON NEXT 5M
+MAXSIZE 20M
+EXTENT MANAGEMENT LOCAL
+OFFLINE;
+
+DROP TABLESPACE APV_QDATA
+
+
+ALTER TABLESPACE APV_QDATA ONLINE;
+--Выделите пользователю XXX квоту 2M в пространстве XXX_QDATA
+ALTER USER APVCORE QUOTA 2M ON APV_QDATA;
+
+CREATE TABLE XXX_T1 (
+  id NUMBER(5),
+  name VARCHAR2(50)
+)TABLESPACE APV_QDATA;
+
+-- Добавьте 3 строки в таблицу
+INSERT INTO XXX_T1 (id, name) VALUES (1, 'Row 1');
+INSERT INTO XXX_T1 (id, name) VALUES (2, 'Row 2');
+INSERT INTO XXX_T1 (id, name) VALUES (3, 'Row 3');
+--
