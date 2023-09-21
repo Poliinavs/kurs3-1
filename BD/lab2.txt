@@ -22,7 +22,7 @@ FROM dba_data_files
 Union
 SELECT tablespace_name, file_name
 FROM dba_temp_files;
---временные табличные пространства и файлы
+--временные табличные пространства и файлыf
 
 
 --4 
