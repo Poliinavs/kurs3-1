@@ -1,0 +1,115 @@
+SELECT name, open_mode
+FROM v$pdbs;
+
+--22. Выполните запрос к ORA12W, позволяющий получить перечень экземпляров.
+SELECT instance_name, host_name, version
+FROM v$instance;
+--3 перечень установленных компонентов СУБД Oracle 12c и их версии и статус
+SELECT comp_id, comp_name, version, status
+FROM dba_registry;
+--4 -5 dbca через sql
+SELECT name, open_mode
+FROM v$pdbs;
+--5
+
+
+CREATE TABLESPACE TS_APV
+DATAFILE 'C:\lab\lab3\TS_APV.dbf'
+    SIZE 7M
+    AUTOEXTEND ON NEXT 5M
+    MAXSIZE 20M;
+
+SELECT tablespace_name
+FROM dba_tablespaces
+
+CREATE ROLE RL_APVCORE;
+--разрешения
+
+
+ GRANT CREATE SESSION,
+              CREATE ANY TABLE,
+              CREATE ANY VIEW,
+              CREATE PROCEDURE TO RL_APVCORE;
+        GRANT DROP ANY TABLE TO RL_APVCORE;
+        GRANT DROP ANY VIEW TO RL_APVCORE;
+        GRANT DROP ANY PROCEDURE TO RL_APVCORE;
+        
+SELECT * 
+FROM dba_roles
+WHERE role = 'RL_APVCORE';
+
+CREATE PROFILE PF_APVCORE LIMIT
+    FAILED_LOGIN_ATTEMPTS 7 --КОЛИЧ ПОПЫТОК ВХОДА
+    PASSWORD_LIFE_TIME 180
+    SESSIONS_PER_USER 3 -- КОЛИЧЕСТВО СЕССИЙ ДЛЯ ПОЛЬЗОВАТЕЛЯ
+    PASSWORD_REUSE_TIME 10 --ЧЕРЕЗ СКОЛЬКО ДНЕЙ МОЖНО ПОВТОРИТЬ ПАРОЛЬ
+    CONNECT_TIME 5 --ВРЕМЯ СОЕДИНЕНИЯ, МИНУТ 
+    IDLE_TIME 30 -- КОЛИЧЕСТВО МИНУТ ПРОСТОЯ
+    PASSWORD_LOCK_TIME 1 --КОЛИЧ ДНЕЙ БЛОКИРОВКИ ПОСЛЕ ОШИБОК
+    PASSWORD_GRACE_TIME DEFAULT; --КОЛИЧ ДНЕЙ ПРЕДЕПРЕЖДЕНИЙ О СМЕНЕ ПАРОЛЯ
+    
+SELECT *
+FROM dba_profiles
+WHERE profile = 'PF_APVCORE';
+
+CREATE USER U1_APV_PDB
+  IDENTIFIED BY 1
+  DEFAULT TABLESPACE TS_APV
+  PROFILE PF_APVCORE
+  ACCOUNT UNLOCK;
+  
+DROP User U1_APV_PDB
+grant RL_APVCORE to  U1_APV_PDB
+--7 под пользователем таблицу
+ALTER USER U1_APV_PDB QUOTA 2M ON TS_APV;
+
+CREATE TABLE XXX_T1 (
+  id NUMBER(5),
+  name VARCHAR2(50)
+)TABLESPACE TS_APV;
+
+-- Добавьте 3 строки в таблицу
+INSERT INTO XXX_T1 (id, name) VALUES (1, 'Row 1');
+INSERT INTO XXX_T1 (id, name) VALUES (2, 'Row 2');
+INSERT INTO XXX_T1 (id, name) VALUES (3, 'Row 3');
+
+select * from XXX_T1;
+--8 от SYS
+--Файлы (перманентные и временные):
+SELECT file_id, file_name, tablespace_name FROM dba_data_files
+Union
+SELECT file_id, file_name, tablespace_name FROM dba_temp_files;
+--Роли и выданные им привилегии
+SELECT grantee AS username, granted_role AS role FROM dba_role_privs;
+--Пользователи и назначенные им роли
+SELECT username, default_tablespace, profile FROM dba_users;
+
+
+--connect C##GDS/1@//localhost:1521/PDB_AP as sysdba;
+
+--sqlplus C##APV@//192.168.140.4:1521/PDB_AP
+--1
+SELECT * FROM v$session WHERE container_id = (SELECT con_id FROM v$containers WHERE name = 'CDB');
+SELECT * FROM v$session WHERE username IN ('U1_APV_PDB', 'C##APV', 'C##GDS');
+
+--12
+
+--DROP PLUGGABLE DATABASE APV_PDB INCLUDING DATAFILES;
+--DROP USER C##APV CASCADE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+----sqlplus U1_APV_PDB@pdb_ap
+-- CONNECT SYS/1 AS SYSDBA;
+-- ALTER PLUGGABLE DATABASE PDB_AP OPEN;
+-- SELECT name, open_mode FROM v$pdbs;
