@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Person</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="container">
+
+  <h1>New Person:</h1>
+  <form th:action="@{/removeperson}"
+        th:object="${personForm}" method="POST">
+    <p>firstname of redax person:
+      <input type="text" th:field="*{firstname}" />
+    </p>
+    <p>new name:
+      <input type="text" th:field="*{surname}" />
+    </p>
+    <input class ="button-main-page" type="submit" value="Add" />
+  </form>
+
+</div>
+<div th:if="${errorMessage}" th:utext="${errorMessage}"
+     style="color:red;font-style:italic;">
+</div>
+</body>

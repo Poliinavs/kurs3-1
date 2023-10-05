@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Book List</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<h1>Person List</h1>
+<h2> <a  href="addperson">Add new person</a> </h2>
+<h2> <a  href="delperson">Del person</a> </h2>
+<h2> <a  href="removeperson">Edit person</a> </h2>
+<br/><br/>
+
+<div class="container">
+  <table class ="container" border="1">
+    <tr>
+      <th><h1>firstName</h1></th>
+      <th><h1>surname</h1></th>
+    </tr>
+    <tr th:each ="person : ${persons}">
+      <td th:utext="${person.firstname}">...</td>
+      <td th:utext="${person.surname}">...</td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
