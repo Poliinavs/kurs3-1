@@ -1,0 +1,195 @@
+--1 список всех файлов табличных пространств 
+SELECT tablespace_name, file_name
+FROM dba_data_files
+UNION ALL
+SELECT tablespace_name, file_name
+FROM dba_temp_files;
+
+--2
+--Создание табличного пространства APV_QDATA размером 10 МБ и установка его в состояние offline
+DROP TABLESPACE APV_QDATA INCLUDING CONTENTS AND DATAFILES;
+CREATE TABLESPACE APV_QDATA
+DATAFILE 'apv_qdata.dbf' SIZE 10M AUTOEXTEND ON NEXT 1M MAXSIZE UNLIMITED
+OFFLINE;
+--Перевод табличного пространства APV_QDATA в состояние online
+ALTER TABLESPACE APV_QDATA ONLINE;
+--Выделение пользователю APV квоты 2 МБ в табличном пространстве APV_QDATA:
+ALTER USER APV QUOTA 2M ON APV_QDATA;
+
+Drop user APV
+CREATE USER APV IDENTIFIED BY 1;
+ GRANT CONNECT, RESOURCE TO APV;
+ GRANT UNLIMITED TABLESPACE TO APV;
+ GRANT SELECT ON DBA_SEGMENTS TO APV;
+ GRANT SELECT ON APV.APV_T1 TO APV;
+ 
+ -----под APV
+ CREATE TABLE APV_T1 (
+    id NUMBER,
+    data VARCHAR2(50)
+) tablespace APV_QDATA ;
+ 
+ INSERT INTO APV_T1 (id, data)
+VALUES (1, 'Запись 1');
+
+INSERT INTO APV_T1 (id, data)
+VALUES (2, 'Запись 2');
+
+INSERT INTO APV_T1 (id, data)
+VALUES (3, 'Запись 3');
+
+commit;
+
+select * from APV_T1;
+-- Получение списка сегментов в табличном пространстве XXX_QDATA
+
+--Определение сегмента таблицы XXX_T1:
+SELECT segment_name, segment_type
+FROM dba_segments
+WHERE tablespace_name = 'APV_QDATA'
+  AND segment_name = 'APV_T1';
+--всех сегментов:
+SELECT segment_name, segment_type
+FROM dba_segments
+WHERE tablespace_name = 'APV_QDATA';
+
+--4
+DROP TABLE APV_T1;
+
+-- Получение списка сегментов в табличном пространстве XXX_QDATA меняется название после удаление
+
+
+SELECT *
+FROM dba_segments
+WHERE tablespace_name = 'APV_QDATA';
+
+  
+SELECT * FROM USER_RECYCLEBIN;
+
+--5 Восстановите (FLASHBACK) удаленную таблицу. 
+FLASHBACK TABLE APV_T1 TO BEFORE DROP;
+
+--6
+-- Создаем последовательность для генерации уникальных значений
+CREATE SEQUENCE APV_T1_SEQ START WITH 1 INCREMENT BY 1;
+
+-- Заполняем таблицу данными (10000 строк)
+DECLARE
+    v_counter NUMBER := 1;
+BEGIN
+    WHILE v_counter <= 10000 LOOP
+        INSERT INTO APV_T1 (id, data)
+        VALUES (APV_T1_SEQ.NEXTVAL, 'Data ' || v_counter);
+        v_counter := v_counter + 1;
+    END LOOP;
+    COMMIT; -- Фиксируем изменения
+END;
+
+select * from APV_T1;
+
+--7
+-- Определение количества экстентов и их размера в блоках и байтах PDB_APV SYSTEM
+
+SELECT S.SEGMENT_NAME,
+       COUNT(E.BLOCK_ID) AS EXTENT_COUNT,
+       SUM(E.BLOCKS) * TBS.BLOCK_SIZE AS SIZE_IN_BYTES
+FROM DBA_SEGMENTS S
+JOIN DBA_EXTENTS E ON S.SEGMENT_NAME = E.SEGMENT_NAME
+JOIN DBA_TABLESPACES TBS ON S.TABLESPACE_NAME = TBS.TABLESPACE_NAME
+WHERE S.SEGMENT_NAME = 'APV_T1'
+GROUP BY S.SEGMENT_NAME, TBS.BLOCK_SIZE;
+
+-- Получение перечня всех экстентов для таблицы APV_T1
+SELECT FILE_ID, BLOCK_ID, BLOCKS
+FROM DBA_EXTENTS
+WHERE SEGMENT_NAME = 'APV_T1'
+ORDER BY FILE_ID, BLOCK_ID;
+
+--8 8. Удалите табличное пространство XXX_QDATA и его файл. 
+DROP TABLESPACE APV_QDATA INCLUDING CONTENTS AND DATAFILES;
+--9
+--Получение перечня всех групп журналов повтора:
+SELECT GROUP# AS GROUP_NUMBER, THREAD# AS THREAD_NUMBER, STATUS, FIRST_CHANGE# AS FIRST_CHANGE_NUMBER
+FROM V$LOG;
+--Определение текущей группы журналов повтора:
+select * from v$log;
+select group# from v$log where status = 'CURRENT';
+
+--10 10. Получите перечень файлов всех журналов повтора инстанса.
+select * from v$logfile;
+--11 С помощью переключения журналов повтора пройдите полный цикл переключений PDB_AP
+ALTER SYSTEM SWITCH LOGFILE;
+SELECT group#, sequence#, bytes, members, status, first_change# FROM V$LOG;
+
+SELECT * FROM V$LOG;
+
+
+--12  УДАЛИТЬ Создайте дополнительную группу журналов повтора с тремя файлами журнала
+
+alter database add logfile group 3 'C:\ORACLE\APP\ORACLE\ORADATA\CDBTEST1\ONLINELOG\REDO03.LOG' 
+                                                size 50 m blocksize 512;
+alter database add logfile member 'C:\ORACLE\APP\ORACLE\ORADATA\CDBTEST1\ONLINELOG\REDO031.LOG'  to group 3;
+alter database add logfile member 'C:\ORACLE\APP\ORACLE\ORADATA\CDBTEST1\ONLINELOG\REDO032.LOG'  to group 3;
+
+
+SELECT group#, member
+FROM v$logfile;
+ALTER SYSTEM SWITCH LOGFILE;
+SELECT group#, sequence#, bytes, members, status, first_change# FROM V$LOG;
+
+--13  не Current меняем  ALTER SYSTEM SWITCH LOGFILE;
+ALTER SYSTEM CHECKPOINT;
+
+alter database clear logfile group 3;
+alter database drop logfile group 3;
+SELECT group#, sequence#, bytes, members, status, first_change# FROM V$LOG;
+
+--14 выполняется или нет архивирование журналов повтора 
+SELECT NAME, LOG_MODE FROM V$DATABASE;
+SELECT INSTANCE_NAME, ARCHIVER, ACTIVE_STATE FROM V$INSTANCE;
+
+--15 номер последнего архива
+SELECT MAX(sequence#) AS last_archive_log
+FROM v$archived_log;
+
+--16 ВКЛЮЧЕНИЕ АРХИВИРОВАНИЯ
+--sql plus
+--connect /as sysdba
+--shutdown immediate;
+--startup mount;
+--alter database archivelog;
+--alter database open;
+--17  архивный файл И ВЫВОД МЕСТОПОЛОЖЕНИЯ
+ALTER SYSTEM ARCHIVE LOG CURRENT; 
+ 
+ ALTER SYSTEM SWITCH LOGFILE;
+SELECT NAME, FIRST_CHANGE#, NEXT_CHANGE# FROM V$ARCHIVED_LOG;
+
+--18 18. EX. Отключите архивирование. Убедитесь, что архивирование отключено.  
+--sql plus
+--connect /as sysdba
+--shutdown immediate;
+--startup mount;
+--alter database noarchivelog;
+--select name, log_mode from v$database;
+--alter database open;
+--19. Получите список управляющих файлов.
+select name from v$controlfile;
+--20  Получите и исследуйте содержимое управляющего файла. Поясните известные вам параметры в файле.
+show parameter control;
+--21 21. Определите местоположение файла параметров инстанса. Убедитесь в наличии этого файла. 
+ALTER DATABASE BACKUP CONTROLFILE TO TRACE;            --одержит информацию о текущем управляющем файле базы данных, и сохраняет этот скрипт в файле трассировки
+show parameter spfile ;
+--22 C:\Oracle\DB21\database    22. Сформируйте PFILE с именем XXX_PFILE.ORA
+CREATE PFILE='APV_PFILE.ORA' FROM SPFILE;
+
+--2323.  файла паролей инстанса. Убедитесь в наличии этого файла
+SELECT *
+FROM v$parameter
+WHERE name = 'remote_login_passwordfile';
+--24. Получите перечень директориев для файлов сообщений и диагностики. 
+SELECT name, value
+FROM v$parameter
+--25 Найдите и исследуйте содержимое протокола работы инстанса (LOG.XML
+-- C:\Oracle\app\oracle\diag\tnslsnr\DESKTOP-3U1GLK4\listener\alert
+

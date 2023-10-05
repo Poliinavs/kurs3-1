@@ -1,10 +1,78 @@
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>text:</h1>-->
+<!--<h2 id="inner"></h2>-->
+<!--<script>-->
+<!--    document.addEventListener("DOMContentLoaded", () => {-->
+<!--        const elem = document.getElementById("inner");-->
+
+<!--        fetch("/fact?${i}")-->
+<!--            .then((response) => {-->
+<!--                if (!response.ok) {-->
+<!--                    throw new Error("Failed to fetch data");-->
+<!--                }-->
+<!--                return response.text();-->
+<!--            })-->
+<!--            .then((text) => {-->
+<!--                elem.textContent = text;-->
+<!--            })-->
+<!--            .catch((error) => {-->
+<!--                console.error("An error occurred:", error);-->
+<!--            });-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8" />
 </head>
 <body>
-$END$
+
+<h2 id="inner"></h2>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const elem = document.getElementById("inner");
+
+        // Добавляем новый h1 элемент
+        const h1Elem = document.createElement("h1");
+        document.body.appendChild(h1Elem);
+
+        const startTime = performance.now();
+        for (let i = 0; i <= 20; i++) {
+            fetch(`/fact?k=${i}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch data");
+                    }
+                    return response.text();
+                })
+                .then((text) => {
+                    // Выводим номер цикла и значение
+                    const factor = parseInt(text);
+                    const currentTime = Math.round(performance.now() - startTime);
+                  //  var rez = (currentTime-i)/factor;
+                    elem.innerHTML += `<p>${i}. Результат: ${currentTime}-${i}/${factor} </p>`;
+                    if(i==20){
+                        const currentTime = Math.round(performance.now() - startTime);
+                        elem.innerHTML += `<p>общая продолжительность всего цикла запросов: ${currentTime} </p>`;
+                    }
+                })
+                .catch((error) => {
+                    console.error("An error occurred:", error);
+                });
+
+        }
+
+
+
+    });
+</script>
 </body>
 </html>
+

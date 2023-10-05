@@ -48,12 +48,5 @@ rl.on('line', (line) => { // Исправление: изменена перем
     rl.prompt();
 });
 
-
-
-
-
-
-
-
 //console.log("http://localhost:5000")
-//node index
+//node 03-01

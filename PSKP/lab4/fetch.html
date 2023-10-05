@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    .form-container {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"] {
+        width: 90%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    button[type="submit"] {
+        background-color: #007BFF;
+        color: #fff;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+  <h1>Lab 4</h1>
+  <h2>Get</h2>
+  <div id="rez"></div>
+  <button onclick="get()">All values</button>
+
+  <h2>Post</h2>
+  <form id="myForm" onsubmit="post(); return false;">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+      <label for="day">Day:</label>
+      <input type="date" id="day" name="day" required>
+    </div>
+    <div class="form-group">
+      <label for="id">Id:</label>
+      <input type="text" id="id" name="id" required>
+    </div>
+    <button type="submit">Submit</button>
+    <p id="error_Post"></p>
+  </form>
+
+  <h2>PUT</h2>
+  <form id="myForm1" onsubmit="put(); return false;">
+    <div class="form-group">
+      <label for="name1">Name:</label>
+      <input type="text" id="name1" name="name1" required>
+    </div>
+    <!-- <div class="form-group">
+      <label for="day1">Day:</label>
+      <input type="date" id="day1" name="day1" required>
+    </div> -->
+    <div class="form-group">
+      <label for="day1">Day:</label>
+      <input type="date" id="day1" name="day1" required>
+    </div>
+    <div class="form-group">
+      <label for="id1">Id:</label>
+      <input type="text" id="id1" name="id1" required>
+    </div>
+    <button type="submit">Submit</button>
+    <p id="error_Put"></p>
+  </form>
+  <h2>Delete</h2>
+
+  <form id="myForm1" onsubmit="del(); return false;">
+   
+    <div class="form-group">
+      <label for="id2">Id:</label>
+      <input type="text" id="id2" name="id2" required>
+    </div>
+    <button type="submit">Submit</button>
+    <p id="error_Del"></p>
+  </form>
+
+
+
+
+  <script>
+    function get() {
+      console.log('GET');
+      fetch('/api/db')
+        .then(resp => resp.json())
+        .then(pdata => {
+          rez.innerHTML = '';
+          pdata.forEach(el => {
+            rez.innerHTML += (el.id + ' ' + el.name + ' ' + el.day + '<br/>');
+          })
+        })
+        .catch(error => {
+          console.error('Ошибка при выполнении запроса:', error);
+        });
+    }
+
+    function post() {
+      console.log('POST');
+      error_Post.innerHTML="";
+      let id = document.getElementById('id').value;
+      let name = document.getElementById('name').value;
+      let day = document.getElementById('day').value;
+      fetch('/api/db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id, name, day })
+      })
+        .then(() => {
+          error_Post.innerHTML="Данные отправлены";
+        }) 
+    }
+
+    
+    function put() {
+      console.log('PUT');
+      error_Post.innerHTML="";
+      let id = document.getElementById('id1').value;
+      let name = document.getElementById('name1').value;
+      let day = document.getElementById('day1').value;
+      fetch('/api/db', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id, name, day })
+      })
+        .then(() => {
+          error_Put.innerHTML="Данные отправлены";
+        }) 
+    }
+
+    function del() {
+      console.log('Del');
+      error_Post.innerHTML="";
+      let id = document.getElementById('id2').value;
+      fetch('/api/db', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id })
+      })
+      .then(resp => resp.json())
+        .then(pdata => {
+          rez.innerHTML = '';
+          pdata.forEach(el => {
+        console.log (el.id + ' ' + el.name + ' ' + el.day );
+          })
+        })
+        .then(() => {
+          error_Del.innerHTML="Данные отправлены";
+        }) 
+    }
+
+ function autofill() {
+   console.log("dd");
+   var idInput = document.getElementById('id');
+   var nameInput = document.getElementById('name');
+   var dayInput = document.getElementById('day');
+
+   if (db && idInput.value.trim() !== '') {
+     const idToFind = parseInt(idInput.value);
+
+     const foundItem = db.find(item => item.id === idToFind);
+
+     if (foundItem) {
+       nameInput.value = foundItem.name;
+       dayInput.value = foundItem.day;
+     } else {
+       nameInput.value = "";
+       dayInput.value = "";
+     }
+   } else {
+     nameInput.value = '';
+     dayInput.value = '';
+   }
+ }
+
+
+
+
+ var inputid = document.getElementById('id');
+
+
+ inputid.oninput = function() {
+        console.log("rr");
+    };
+
+
+
+
+
+
+
+
+//для запрета ввода даты 
+
+
+var currentDate = new Date();
+
+var year = currentDate.getFullYear();
+var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+var day = String(currentDate.getDate()).padStart(2, '0');
+
+var maxDate = year + '-' + month + '-' + day;
+
+document.getElementById('day1').setAttribute('max', maxDate);
+
+document.getElementById('day').setAttribute('max', maxDate);
+
+
+    
+  </script>
+</body>
+</html>
