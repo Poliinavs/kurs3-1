@@ -1,0 +1,41 @@
+# Игнорировать временные файлы
+*.swp
+*.swo
+*.docx
+*.pdg
+# Игнорировать файлы сборки и исполняемые файлы
+/bin/
+/build/
+*.exe
+
+# Игнорировать файлы объектных файлов и библиотек
+*.o
+*.a
+
+# Игнорировать файлы проектов IDE
+.vscode/
+.idea/
+
+# Игнорировать файлы компиляции и сгенерированные файлы Makefile
+Makefile
+CMakeLists.txt.user
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Игнорировать файлы логов и отладки
+*.log
+*.dSYM/
+*.stackdump
+
+# Игнорировать файлы конфигурации компилятора
+CMakeFiles/
+CMakeScripts/
+CMakeCache.txt
+CMakeFiles/
+CMakeDoxyfile.in
+
+# Игнорировать файлы настроек редактора
+.vscode/
+.idea/
