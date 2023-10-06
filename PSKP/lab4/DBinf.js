@@ -29,7 +29,8 @@ function DB(){
             console.log("push sucsess");
             return x;
         }
-        else console.log('id exists');
+        return false;
+       
     };
     this.update=(x)=>
     {

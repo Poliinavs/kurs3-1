@@ -25,7 +25,10 @@ db.on('POST', (req, resp)=>{
             const result = db.insert(JSON.parse(b));
            // resp.end(JSON.stringify(db.select()));
         
+           if(result!=false)
            resp.end(JSON.stringify(result));
+        else 
+        throw new Error('id уже существует');
         } catch (error) {
             console.error('Error parsing JSON:', error);
             resp.statusCode = 400; // Ошибка парсинга JSON
@@ -46,6 +49,7 @@ db.on('PUT', (req, resp)=>{
             const result = db.update(JSON.parse(b));
            // resp.end(JSON.stringify(db.select()));
            resp.end(JSON.stringify(result));
+           console.log("fff");
         } catch (error) {
             console.error('Error parsing JSON:', error);
             resp.statusCode = 400; // Ошибка парсинга JSON

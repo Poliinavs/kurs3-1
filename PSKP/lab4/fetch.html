@@ -83,7 +83,7 @@
     </div>
     <div class="form-group">
       <label for="id1">Id:</label>
-      <input type="text" id="id1" name="id1" required>
+      <input type="text" id="id1" name="id1" required oninput="autoFillFields()">
     </div>
     <button type="submit">Submit</button>
     <p id="error_Put"></p>
@@ -136,6 +136,7 @@
         .then(() => {
           error_Post.innerHTML="Данные отправлены";
         }) 
+       
     }
 
     
@@ -182,40 +183,77 @@
         }) 
     }
 
- function autofill() {
-   console.log("dd");
-   var idInput = document.getElementById('id');
-   var nameInput = document.getElementById('name');
-   var dayInput = document.getElementById('day');
+//  function autofill() {
+//    console.log("dd");
+//    var idInput = document.getElementById('id');
+//    var nameInput = document.getElementById('name');
+//    var dayInput = document.getElementById('day');
 
-   if (db && idInput.value.trim() !== '') {
-     const idToFind = parseInt(idInput.value);
+//    if (db && idInput.value.trim() !== '') {
+//      const idToFind = parseInt(idInput.value);
 
-     const foundItem = db.find(item => item.id === idToFind);
+//      const foundItem = db.find(item => item.id === idToFind);
 
-     if (foundItem) {
-       nameInput.value = foundItem.name;
-       dayInput.value = foundItem.day;
-     } else {
-       nameInput.value = "";
-       dayInput.value = "";
-     }
-   } else {
-     nameInput.value = '';
-     dayInput.value = '';
-   }
- }
-
-
+//      if (foundItem) {
+//        nameInput.value = foundItem.name;
+//        dayInput.value = foundItem.day;
+//      } else {
+//        nameInput.value = "";
+//        dayInput.value = "";
+//      }
+//    } else {
+//      nameInput.value = '';
+//      dayInput.value = '';
+//    }
+//  }
 
 
- var inputid = document.getElementById('id');
 
 
- inputid.oninput = function() {
-        console.log("rr");
-    };
+//  var inputid = document.getElementById('id');
 
+
+//  inputid.oninput = function() {
+//         console.log("rr");
+//     };
+
+
+
+//////////////////////////////////////////
+
+
+function autoFillFields() {
+        var id = document.getElementById('id1').value;
+
+
+        if (id.length > 0) {
+          
+          id = parseInt(id);
+          console.log('GET');
+      fetch('/api/db')
+        .then(resp => resp.json())
+        .then(pdata => {
+          rez.innerHTML = '';
+          pdata.forEach(el => {
+            if(el.id==id){
+                  console.log(el.id + ' ' + el.name + ' ' + el.day);
+                  document.getElementById('day1').value = el.day;
+            document.getElementById('name1').value =el.name ;
+            }
+          
+          })
+        })
+        .catch(error => {
+          console.error('Ошибка при выполнении запроса:', error);
+        });
+
+          
+        }
+    }
+
+
+
+//////////////////////////////////////////
 
 
 
