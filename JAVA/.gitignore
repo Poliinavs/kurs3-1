@@ -1,0 +1,37 @@
+# Игнорировать файлы среды выполнения и сборки
+target/
+build/
+bin/
+
+# Игнорировать логи
+*.log
+*.docx
+*.pdf
+*.gz
+# Игнорировать файлы настроек IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Игнорировать файлы настроек Maven
+target/
+pom.xml.backup
+release.properties
+dependency-reduced-pom.xml
+
+# Игнорировать файлы настроек Gradle
+.gradle/
+build/
+
+# Игнорировать файлы настроек Eclipse
+.classpath
+.project
+.settings/
+
+# Игнорировать файлы конфигурации Spring Boot
+/application*.yml
+/application*.properties
+
+# Игнорировать файлы для локализации
+/messages/

@@ -10,4 +10,13 @@ import lombok.NoArgsConstructor;
 public class PersonForm {
     private String surname;
     private String firstname;
+
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
 }
