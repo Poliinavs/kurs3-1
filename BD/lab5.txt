@@ -1,0 +1,95 @@
+--1.	Определите общий размер области SGA.
+select sum(value) from v$sga;
+
+--2.	Определите текущие размеры основных пулов SGA.
+select * from v$sga_dynamic_components where current_size > 0;
+--3.	Определите размеры гранулы для каждого пула.
+select component, granule_size from v$sga_dynamic_components where current_size > 0;
+--4.	Определите объем доступной свободной памяти в SGA.
+select current_size from v$sga_dynamic_free_memory;
+--5.	Определите максимальный и целевой размер области SGA.
+SELECT * FROM v$sga;
+--6.	Определите размеры пулов КЕЕP, DEFAULT и RECYCLE буферного кэша.
+select component, current_size, min_size from v$sga_dynamic_components
+where component ='KEEP buffer cache' or component = 'DEFAULT buffer cache' or component = 'RECYCLE buffer cache';
+--7.	Создайте таблицу, которая будет помещаться в пул КЕЕP. Продемонстрируйте сегмент таблицы.
+
+
+
+
+create table tableKeep(x int) storage(buffer_pool keep) tablespace users;
+insert into tableKeep values (1);
+commit;
+select segment_name, segment_type, tablespace_name, buffer_pool from user_segments 
+    where segment_name='TABLEKEEP';
+    
+drop table tableKeep;
+--8.	Создайте таблицу, которая будет кэшироваться в пуле DEFAULT. Продемонстрируйте сегмент таблицы. 
+create table tableDefault (k int) 
+storage(buffer_pool default) 
+tablespace users;
+
+insert into tableDefault values (1);
+commit;
+
+select segment_name, segment_type, tablespace_name, buffer_pool from user_segments
+where segment_name in ('TABLEKEEP', 'TABLEDEFAULT');
+
+drop table tableDefault;
+--9.	Найдите размер буфера журналов повтора.
+
+show parameter log_buffer;
+
+--10.	Найдите размер свободной памяти в большом пуле.
+select pool, name, bytes from v$sgastat
+where pool = 'large pool' and name = 'free memory';
+--11.	Определите режимы текущих соединений с инстансом (dedicated, shared).
+select username, server from v$session;
+
+--12.	Получите полный список работающих в настоящее время фоновых процессов.
+select sid, serial#, process, program, status from v$session
+    where type = 'BACKGROUND';
+
+--13.	Получите список работающих в настоящее время серверных процессов.
+select sid, program, status from v$session;
+--14.	Определите, сколько процессов DBWn(твечают за запись данных из буфера кэша (Buffer Cache) SGA на диск) работает в настоящий момент.
+select count(*) from v$process where program like 'DBW%';
+--15.	Определите сервисы (точки подключения экземпляра).
+SELECT *
+FROM v$active_services;
+--16.	Получите известные вам параметры диспетчеров.
+SELECT * FROM v$dispatcher;
+--17.	Укажите в списке Windows-сервисов сервис, реализующий процесс LISTENER.
+
+
+--18.	Продемонстрируйте и поясните содержимое файла LISTENER.ORA. 
+
+
+--19.	Запустите утилиту lsnrctl и поясните ее основные команды. 
+
+
+--start: Запуск службы Oracle Listener. Пример: start.
+--
+--stop: Остановка службы Oracle Listener. Пример: stop.
+--
+--status: Проверка текущего состояния службы Oracle Listener и отображение информации о прослушиваемых портах и зарегистрированных сервисах. Пример: status.
+--
+--reload: Перезагрузка конфигурации Oracle Listener без перезапуска службы. Это может быть полезно после внесения изменений в файл конфигурации listener.ora. Пример: reload.
+--
+--save_config: Сохранение текущей конфигурации службы Oracle Listener в файл. Пример: save_config.
+--
+--trace: Включение или выключение трассировки (отслеживания) для Oracle Listener. Это может быть полезно для диагностики проблем с прослушиванием. Примеры:
+--
+--trace on: Включить трассировку.
+--trace off: Выключить трассировку.
+--service: Позволяет добавлять, удалять и проверять зарегистрированные службы. Примеры:
+--
+--service add <service_name> <protocol> <port>: Добавление сервиса в Oracle Listener.
+--service delete <service_name>: Удаление сервиса из Oracle Listener.
+--service status <service_name>: Проверка статуса определенного сервиса.
+--set: Используется для настройки параметров Oracle Listener во время выполнения. Пример: set <параметр> <значение>.
+--
+--quit или exit: Выход из утилиты lsnrctl.
+
+
+--20.	Получите список служб инстанса, обслуживаемых процессом LISTENER.  lsnrctl status
