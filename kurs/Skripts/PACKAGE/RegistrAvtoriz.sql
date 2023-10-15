@@ -1,0 +1,108 @@
+-- Registration and Authorization
+CREATE OR REPLACE PACKAGE AuthPackage AS
+  -- Процедура для регистрации нового пользователя
+  PROCEDURE REGISTRATION(
+    LOGIN_P IN USERS.LOGIN%TYPE,
+    EMAIL_P IN USERS.EMAIL%TYPE,
+    PASS_P IN USERS.PASSWORD%TYPE
+  );
+
+  -- Функция для авторизации пользователя
+  FUNCTION LOGIN(
+    USER_LOGIN IN USERS.LOGIN%TYPE,
+    USER_PASS IN USERS.PASSWORD%TYPE
+  ) RETURN USERS.ID%TYPE;
+
+END AuthPackage;
+/
+
+CREATE OR REPLACE PACKAGE BODY AuthPackage AS
+  -- Процедура для регистрации нового пользователя
+  PROCEDURE REGISTRATION(
+    LOGIN_P IN USERS.LOGIN%TYPE,
+    EMAIL_P IN USERS.EMAIL%TYPE,
+    PASS_P IN USERS.PASSWORD%TYPE
+  ) IS
+    USER_COUNT_EM NUMBER;
+    USER_COUNT_LOGIN NUMBER;
+  BEGIN
+
+
+      IF VALIDATION_PACKAGE.CHECK_EMAIL(EMAIL_P) = FALSE THEN
+            RAISE EXCEPTIONS.INCORRECTLY_EMAIL;
+    END IF;
+
+    -- Проверка уникальности адреса электронной почты
+    SELECT COUNT(*)
+    INTO USER_COUNT_EM
+    FROM Users
+    WHERE Users.EMAIL = EMAIL_P;
+
+
+    IF USER_COUNT_EM > 0 THEN
+        RAISE EXCEPTIONS.EMAIL_ALREADY_EXISTS;
+    END IF;
+
+    -- Проверка уникальности логина
+    SELECT COUNT(*)
+    INTO USER_COUNT_LOGIN
+    FROM Users
+    WHERE Users.LOGIN = LOGIN_P;
+
+    IF USER_COUNT_LOGIN > 0 THEN
+         RAISE EXCEPTIONS.LOGIN_ALREADY_EXISTS;
+    END IF;
+
+    -- Вставка нового пользователя
+    INSERT INTO USERS(LOGIN, EMAIL, PASSWORD)
+    VALUES(LOGIN_P, EMAIL_P, PASS_P);
+
+    COMMIT;
+EXCEPTION
+ WHEN EXCEPTIONS.INCORRECTLY_EMAIL THEN
+    RAISE_APPLICATION_ERROR(-20000, 'email address entered incorrectly');
+
+  WHEN EXCEPTIONS.EMAIL_ALREADY_EXISTS THEN
+    RAISE_APPLICATION_ERROR(-20001, 'user with this email address already exists');
+
+ WHEN EXCEPTIONS.LOGIN_ALREADY_EXISTS THEN
+    RAISE_APPLICATION_ERROR(-20002, 'user with this email address already exists');
+
+  WHEN OTHERS THEN
+    RAISE_APPLICATION_ERROR(-20003, 'registration error check the entered data');
+
+END REGISTRATION;
+
+  -- Функция для авторизации пользователя
+  FUNCTION LOGIN(
+    USER_LOGIN IN USERS.LOGIN%TYPE,
+    USER_PASS IN USERS.PASSWORD%TYPE
+  ) RETURN USERS.ID%TYPE
+ IS
+    USER_ID NUMBER;
+     hashed_pass RAW(64);
+  BEGIN
+
+    hashed_pass := DBMS_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW(USER_PASS), DBMS_CRYPTO.HASH_SH256);
+
+    SELECT ID INTO USER_ID
+    FROM USERS
+    WHERE LOGIN = USER_LOGIN AND PASSWORD = hashed_pass;
+
+    IF USER_ID > 0 THEN
+      RETURN USER_ID;
+    ELSE
+      RAISE EXCEPTIONS.NO_SUCH_USER;
+    END IF;
+
+  EXCEPTION
+    WHEN EXCEPTIONS.NO_SUCH_USER THEN
+    RAISE_APPLICATION_ERROR(-20007, 'No such user in system');
+    RETURN NULL;
+
+     WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20006, 'No such user in system');
+      RETURN NULL;
+  END LOGIN;
+END AuthPackage;
+/
