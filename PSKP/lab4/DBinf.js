@@ -34,6 +34,8 @@ function DB(){
     };
     this.update=(x)=>
     {
+        console.log(x);
+        console.log("dddd");
         let index=DBdata.findIndex(item=> item.id==x.id);
         if(index !== -1){
         DBdata.splice(index,1,x);

@@ -3,7 +3,6 @@ var url=require('url');
 let fs = require("fs");
 var id=0;
 
-//каленларь, проверка на повтор id, на буд дату , при put вводим id и сразу подтягивается остальное 
 
 
 const data = require('./DBinf');
@@ -27,8 +26,7 @@ db.on('POST', (req, resp)=>{
         
            if(result!=false)
            resp.end(JSON.stringify(result));
-        else 
-        throw new Error('id уже существует');
+      
         } catch (error) {
             console.error('Error parsing JSON:', error);
             resp.statusCode = 400; // Ошибка парсинга JSON

@@ -1,10 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <title>Отправить почту с помощью Nodemailer</title>
 </head>
 <body>
-$END$
+<h1>Отправить почту с помощью Nodemailer</h1>
+<form action="/send" method="post">
+    <label id="fromEmail">Отправитель:</label>
+    <input type="email" id="sender" name="sender" required><br>
+    <label id="toEmail">Получатель:</label>
+    <input type="email" id="receiver" name="receiver" required><br>
+    <label id="message1">Сообщение:</label><br>
+    <textarea name="message" id="message" rows="4" cols="50" required></textarea><br>
+    <input type="submit" onclick="Post()" value="Отправить">
+</form>
 </body>
 </html>
+
+<script>
+    function Post(){
+        console.log('POST');
+        fetch('http://localhost:5000/', {
+            method: 'POST', mode: "no-cors",
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'text/html'
+            },
+            body: JSON.stringify({sender: sender.value, receiver: receiver.value, message: message.value})
+        }).then(response => response.text())
+            .then(pdata => alert(pdata));
+    }
+</script>
