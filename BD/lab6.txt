@@ -1,0 +1,81 @@
+--1.	Найдите на компьютере конфигурационные файлы SQLNET.ORA и TNSNAMES.ORA и ознакомьтесь с их содержимым.
+--"C:\Oracle\app\oracle\homes\OraDB21Home1\network\admin\sqlnet.ora"
+--"C:\Oracle\app\oracle\homes\OraDB21Home1\network\admin\tnsnames.ora"
+
+
+
+--2.	Соединитесь при помощи sqlplus с Oracle как пользователь SYSTEM, получите перечень параметров экземпляра Oracle.
+--sqlplus system/1@CDBTEST1
+
+SELECT name, value
+FROM v$parameter;
+
+--3.	Соединитесь при помощи sqlplus с подключаемой базой данных как пользователь SYSTEM, получите список табличных пространств, файлов табличных пространств, ролей и пользователей.
+--sqlplus system/1@CDBTEST1
+
+SELECT tablespace_name, file_name
+FROM dba_data_files;
+
+SELECT role FROM dba_roles;
+SELECT username FROM dba_users;
+
+
+--4.	Ознакомьтесь с параметрами в HKEY_LOCAL_MACHINE/SOFTWARE/ORACLE на вашем компьютере.
+
+regedit;
+
+--5.	Запустите утилиту Oracle Net Manager и подготовьте строку подключения с именем имя_вашего_пользователя_SID, где SID – идентификатор подключаемой базы данных. 
+alter session set "_Oracle_SCRIPT"=true;
+
+CREATE TABLE example_table (
+  id NUMBER(5) PRIMARY KEY,
+  name VARCHAR2(50),
+  description VARCHAR2(200)
+);
+
+CREATE USER Pol
+  IDENTIFIED BY 1
+  ACCOUNT UNLOCK;
+  
+  GRANT CREATE TABLE TO Pol;
+    GRANT CREATE SESSION TO Pol;
+  GRANT INSERT, UPDATE, DELETE ON example_table TO Pol;
+  ALTER USER Pol ACCOUNT UNLOCK;
+  ALTER USER Pol QUOTA UNLIMITED ON USERS;
+
+insert into example_table values(1, 'ff', 'disk')
+
+select * from example_table;
+
+--6.	Подключитесь с помощью sqlplus под собственным пользователем и с применением подготовленной строки подключения. 
+sqlplus Pol/1@Poliinavs
+--7.	Выполните select к любой таблице, которой владеет ваш пользователь. 
+
+
+--8.	Ознакомьтесь с командой HELP.Получите справку по команде TIMING. Подсчитайте, сколько времени длится select к любой таблице.
+HELP TIMING
+SET TIMING ON
+
+--9.	Ознакомьтесь с командой DESCRIBE.Получите описание столбцов любой таблицы.
+
+describe dba_data_files;
+--10.	Получите перечень всех сегментов, владельцем которых является ваш пользователь.
+SELECT segment_name, segment_type
+FROM user_segments;
+
+--11.	Создайте представление, в котором получите количество всех сегментов, количество экстентов, блоков памяти и размер в килобайтах, которые они занимают.
+CREATE VIEW segment_info1 AS
+SELECT segment_name, COUNT(*) AS extent_count, SUM(blocks) AS total_blocks, SUM(blocks*8) AS total_size_kb
+FROM dba_segments
+WHERE owner = 'APV'
+GROUP BY segment_name;
+
+ connect /as sysdba
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  Select * from segment_info1;
