@@ -62,16 +62,21 @@ const server = http.createServer((req, res) => {
  /*   console.log(parsedUrl);
     console.log(pathSegments[1]);*/
    if (pathSegments[1] == 'parameter') {
-        const x = parseFloat(pathSegments[2]);
-        const y = parseFloat(pathSegments[3]);
+        const numX = parseFloat(pathSegments[2]);
+        const numY = parseFloat(pathSegments[3]);
        console.log("ff");
-        if (!isNaN(x) && !isNaN(y)) {
-        /*    const sum = x + y;
-            const difference = x - y;
-            const product = x * y;
-            const quotient = x / y;*/
-console.log("ff");
-            res.writeHead(302, { 'Location': `/parameter?x=${x}&y=${y}` });
+        if (!isNaN(numY) && !isNaN(numX)) {
+            console.log("ffssss");
+            const sum = numX + numY;
+            const difference = numX - numY;
+            const product = numX * numY;
+            const quotient = numX / numY;
+
+            // Отправляем результат в ответе
+            res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'});
+            res.end(
+                `Сумма: ${sum}\nРазность: ${difference}\nПроизведение: ${product}\nЧастное: ${quotient}`
+            );
 
 
 
@@ -79,6 +84,19 @@ console.log("ff");
             res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
             res.end('Ошибка: x и y должны быть числами.');
         }
+    }
+
+    if (req.method === 'GET' && req.url.startsWith('/socket')) {
+        const clientIP = req.connection.remoteAddress;
+        const clientPort = req.connection.remotePort;
+
+        // Получите IP-адрес и порт сервера
+        const serverIP = req.connection.localAddress;
+        const serverPort = req.connection.localPort;
+
+        // Вывод информации в окно браузера
+        res.setHeader('Content-Type', 'text/plain');
+        res.end(`Client IP: ${clientIP}, Client Port: ${clientPort}, Server IP: ${serverIP}, Server Port: ${serverPort}`);
     }
 
 
@@ -94,3 +112,4 @@ console.log("http://localhost:3000/connection?set=10")
 console.log("http://localhost:3000/headers")
 console.log("http://localhost:3000/parameter?x=2&y=3")
 console.log("http://localhost:3000/parameter/5/3")
+console.log("http://localhost:3000/socket ")
