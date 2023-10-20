@@ -45,7 +45,7 @@ int main()
 	for (int i = 0; i < 100; i++)
 	{
 		cout << i << " " << "main thread: " << "PID: " << pid << " " << "TID: " << tid << "." << endl;
-		if (i == 40) {
+		if (i == 5) {
 			cout << "\n Terminate SecondTr \n";
 			TerminateThread(SecondTr, -1);
 		}

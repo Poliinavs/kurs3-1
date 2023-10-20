@@ -43,16 +43,16 @@ int main()
 	{
 		cout << i << " " << "main thread: " << "PID: " << pid << " " << "TID: " << tid << "." << endl;
 		Sleep(1000);
-		if (i == 20) {
+		if (i == 10) {
 			SuspendThread(firstTr);
 			cout << "\nSuspend firstTr \n";
 		}
-		else if (i == 60) {
+		else if (i == 20) {
 			ResumeThread(firstTr);
 			cout << "\nResume firstTr \n";
 		}
 
-		if (i == 40) {
+		if (i == 30) {
 			SuspendThread(SecondTr);
 			cout << "\nSuspend SecondTr \n";
 		}

@@ -9,7 +9,7 @@ DWORD WINAPI FirstThread() {
 	for (int i = 0; i < 50; i++)
 	{
 		cout << i << ". FirstThread: " << "PID: " << pid << " " << "TID: " << tid << ";" << endl;
-		if (i==25) {
+		if (i==15) {
 			cout << "Sleep 1"<<endl;
 			Sleep(10000);
 			cout << "Run 1" << endl;
@@ -27,7 +27,7 @@ DWORD WINAPI SecondThread() {
 	{
 		cout << i << ". SecondThread: " << "PID: " << pid << " " << "TID: " << tid << ";" << endl;
 	
-		if (i == 80) {
+		if (i == 10) {
 			cout << "Sleep 2" << endl;
 			Sleep(150000);
 			cout << "Run 2" << endl;
@@ -54,7 +54,7 @@ int main()
 	for (int i = 0; i < 100; i++)
 	{
 		cout << i << " " << "main thread: " << "PID: " << pid << " " << "TID: " << tid << "." << endl;
-		if (i == 30) {
+		if (i == 10) {
 			cout << "Sleep main" << endl;
 			Sleep(10000);
 			cout << "Run main" << endl;
