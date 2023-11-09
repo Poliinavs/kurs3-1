@@ -15,7 +15,6 @@ const req = http.request(options, (res) => {
 });
 
 req.on('error', (e) => {
-    console.error(`Ошибка при отправке запроса: ${e.message}`);
 });
 
 req.end();

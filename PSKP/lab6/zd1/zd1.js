@@ -82,9 +82,6 @@ const server = http.createServer((req, res) => {
 
 
 
-        } else {
-            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('Ошибка: x и y должны быть числами.');
         }
     }
 

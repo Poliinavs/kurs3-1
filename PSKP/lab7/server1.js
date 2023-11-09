@@ -8,7 +8,7 @@ const fs = require('fs');
 const server = http.createServer((req, res) => {
     if (req.url === '/07-01' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type':'text/plain; charset=utf-8' });
-        res.end('Пример ответа сервера для 07-01');
+        res.end('ответ сервера для 07-01');
     }
     const parsedUrl = url.parse(req.url, true);
 
@@ -78,7 +78,7 @@ const server = http.createServer((req, res) => {
                 "x:" : x,
                 "y:" : y,
                 "x_plus_y": x + y,
-                "Concatination": s +": "+ o.name,
+                "Concatination": s +": "+ o.name+" "+o.surname,
                 "Length_m": m.length
             };
 
@@ -146,9 +146,6 @@ const server = http.createServer((req, res) => {
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.end('Internal Server Error');
         });
-    } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Страница не найдена');
     }
 
 
