@@ -12,7 +12,7 @@ int main(int argc, char* argv[])	//OS11_START.exe ..//..//Files/newHT.ht
 	HMODULE libModule = NULL;
 	try
 	{
-		HMODULE libModule = LoadLibrary(L"OS11_HTAPI");
+		 libModule = LoadLibrary(L"OS11_HTAPI");
 		if (!libModule)
 		{
 			throw "Невозможно загрузить библиотеку";
