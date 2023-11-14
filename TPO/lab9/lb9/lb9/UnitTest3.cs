@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Interactions;
 
 namespace lb9
 {
@@ -26,34 +28,35 @@ namespace lb9
         [TestMethod]
         public void CreateNewPasteTest()
         {
+             pastebinPage.OpenPage("https://www.lamoda.by/women-home/"); 
+             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(10);
 
-            driver.Navigate().GoToUrl("https://cloud.google.com/");
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(10);
+            Thread.Sleep(3000);
+             driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/header/div[3]/div/div/div/div/button")).Click();
+             driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/header/div[3]/div/div/div/div/input")).Click();
+             driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/header/div[3]/div/div/div/div/input")).SendKeys("Ботинки трекинговые TERREX UNITY LEA MID R.RDY");
+             driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/header/div[3]/div/div/div/div/button")).Click();
 
-            driver.FindElement(By.XPath("//*[@id=\"kO001e\"]/div[2]/div[1]/div/div[2]/div[2]/div[1]/form/div/input")).Click();
+             Thread.Sleep(7000);
+             driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/div[4]/section/div/button[2]")).Click();
 
-            driver.FindElement(By.XPath("//*[@id=\"kO001e\"]/div[2]/div[1]/div/div[2]/div[2]/div[1]/form/div/input")).SendKeys("Google Cloud Platform Pricing Calculator");
-            driver.FindElement(By.XPath("//*[@id=\"kO001e\"]/div[2]/div[1]/div/div[2]/div[2]/div[1]/form/div/input")).SendKeys(Keys.Enter);
+          driver.FindElement(By.XPath("//*[@id=\"RTLACY744201\"]/div[1]/a")).Click();
 
-            driver.FindElement(By.XPath("//*[@id=\"___gcse_0\"]/div/div/div/div[5]/div[2]/div/div/div[1]/div[1]/div[1]/div[1]/div/a")).Click();
+       /*     pastebinPage.OpenPage("https://www.lamoda.by/p/rtlacy744201/shoes-adidas-botinki-trekingovye/");
+            //driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/div[5]/section/div/button[2]")).Click();
+          
+            driver.FindElement(By.Id("//*[@id=\"vue-root\"]/div/main/div/div[2]/div[2]/div/div[3]/div/div/div/div/div[1]/button")).Click();
+                driver.FindElement(By.XPath("//li[text()='10 Minutes']")).Click();*/
+           
+          //  driver.FindElement(By.XPath("//*[@id=\"vue-root\"]/div/main/div/div[2]/div[2]/div/div[3]/div/div/div/div/div[2]/div")).Click();
 
 
-            //  driver.FindElement(By.XPath("//*[@id=\"mainForm\"]/div[2]/div/md-card/md-card-content/div/div[1]/form/div[1]/div[1]/md-input-container")).SendKeys("4");
-            //    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-            /*            IWebDriver el = (IWebDriver)driver.FindElement(By.XPath("//*[@id=\"select_value_label_94\"]"));
-
-                        WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
-                        wait.Until()*/
-            driver.FindElement(By.XPath("//*[@id=\"mainForm\"]/div[2]/div/md-card/md-card-content/div/div[1]/form/div[1]")).Click();
-
-            driver.FindElement(By.XPath("//*[@id=\"input_99\"]")).SendKeys("4");
-            // Добавьте здесь проверки на успешное создание пасты, например, проверку URL или отображение уведомления.
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            Thread.Sleep(255000);
+            Thread.Sleep(12000);
             driver.Quit();
         }
     }
