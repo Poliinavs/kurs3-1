@@ -1,0 +1,328 @@
+--1. Разработайте АБ, демонстрирующий работу оператора SELECT с точной выборкой. 
+select * from FACULTY;
+ declare
+        fac FACULTY%rowtype;
+    begin
+        select * into fac from FACULTY where faculty='Science';
+        dbms_output.put_line(fac.faculty||' '||fac.faculty_name);
+    end;
+--2-4 Разработайте АБ, демонстрирующий работу оператора SELECT с неточной точной выборкой. Используйте конструкцию WHEN OTHERS секции исключений и встроенную функции SQLERRM, SQLCODE для диагностирования неточной выборки. 
+ 
+--3. Разработайте АБ, демонстрирующий работу конструкции WHEN TO_MANY_ROWS секции исключений для диагностирования неточной выборки. 
+
+--4. Разработайте АБ, демонстрирующий возникновение и обработку исключения NO_DATA_FOUND. Разработайте АБ, демонстрирующий применение атрибутов неявного курсора.
+
+--5. Разработайте АБ, демонстрирующий применение оператора UPDATE совместно с операторами COMMIT/ROLLBACK. 
+
+BEGIN
+
+    UPDATE SUBJECT SET SUBJECT_NAME = 'Physics 203' WHERE SUBJECT = 'SUB001';
+
+    DBMS_OUTPUT.PUT_LINE('New SUBJECT_NAME: ' || 'Physics 103');
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+select * from SUBJECT
+
+--6. Продемонстрируйте оператор UPDATE, вызывающий нарушение целостности в базе данных. Обработайте возникшее исключение.
+
+BEGIN
+
+    UPDATE SUBJECT SET PULPIT = 'Pss' WHERE SUBJECT = 'SUB001';
+
+    DBMS_OUTPUT.PUT_LINE('New SUBJECT_NAME: ' || 'Physics 103');
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+select * from SUBJECT
+--7. Разработайте АБ, демонстрирующий применение оператора INSERT совместно с операторами COMMIT/ROLLBACK.
+
+BEGIN
+
+ INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD00w2', 'Аудитория 2', 60, 'Type1');
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+select * from AUDITORIUM
+
+--8. Продемонстрируйте оператор INSERT, вызывающий нарушение целостности в базе данных. Обработайте возникшее исключение.
+
+BEGIN
+
+ INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD0x0w2', 'Аудитория 2', 60, 'Typexxxx1');
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+--9. Разработайте АБ, демонстрирующий применение оператора DELETE совместно с операторами COMMIT/ROLLBACK.
+-8. Продемонстрируйте оператор INSERT, вызывающий нарушение целостности в базе данных. Обработайте возникшее исключение.
+
+BEGIN
+
+DELETE FROM AUDITORIUM
+WHERE AUDITORIUM = 'AUD00w2';
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+
+--10. Продемонстрируйте оператор DELETE, вызывающий нарушение целостности в базе данных. Обработайте возникшее исключение.
+BEGIN
+
+DELETE FROM FACULTY
+WHERE FACULTY = 'FAC001';
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Changes committed successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+        ROLLBACK;
+
+        DBMS_OUTPUT.PUT_LINE('Changes rolled back.');
+END;
+--Явные курсоры
+
+--11. Создайте анонимный блок, распечатывающий таблицу TEACHER с применением явного курсора LOOP-цикла. Считанные данные должны быть записаны в переменные, объявленные с применением опции %TYPE.
+DECLARE
+    CURSOR cur IS SELECT teacher_name, pulpit, salary FROM TEACHER;
+    v_teacher_name   TEACHER.teacher_name%TYPE;
+    v_pulpit         TEACHER.pulpit%TYPE;
+    v_salary         TEACHER.salary%TYPE;
+BEGIN
+    OPEN cur;
+    LOOP
+        FETCH cur INTO v_teacher_name, v_pulpit, v_salary;
+        EXIT WHEN cur%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE(cur%ROWCOUNT || ' ' || v_teacher_name || ' ' ||
+                             v_pulpit || ' ' || v_salary);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('rowcount = ' || cur%ROWCOUNT);
+    CLOSE cur;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+--12. Создайте АБ, распечатывающий таблицу SUBJECT с применением явного курсора иWHILE-цикла. Считанные данные должны быть записаны в запись (RECORD), объявленную с применением опции %ROWTYPE.
+ declare
+        cursor cur is select subject, subject_name, pulpit from SUBJECT;
+        rec subject%rowtype;
+    begin
+        open cur;
+        fetch cur into rec;
+        while cur%found
+            loop
+            dbms_output.put_line(cur%rowcount||' '||rec.subject||' '||
+                                 rec.subject_name||' '||rec.pulpit);
+            fetch cur into rec;
+            end loop;
+        dbms_output.put_line('rowcount = '||cur%rowcount);
+        close cur;
+    end;
+
+--13. Создайте АБ, распечатывающий все кафедры (таблица PULPIT) и фамилии всех преподавателей (TEACHER) использовав, соединение (JOIN) PULPIT и TEACHER и с применением явного курсора и FOR-цикла.
+declare
+        cursor cur
+            is select pulpit.pulpit, teacher.teacher_name
+            from pulpit inner join teacher on pulpit.pulpit=teacher.pulpit;
+        rec cur%rowtype;
+    begin
+        for rec in cur
+        loop
+            dbms_output.put_line(cur%rowcount||' '||rec.teacher_name||' '||rec.pulpit);
+        end loop;
+    end;
+--14. Создайте АБ, распечатывающий следующие списки аудиторий: все аудитории (таблица AUDITORIUM) с вместимостью меньше 20, от 21-30, от 31-60, от 61 до 80, от 81 и выше. Примените курсор с параметрами и три способа организации цикла по строкам курсора.
+ declare 
+      cursor cur(cap1 auditorium.auditorium%type,cap2 auditorium.auditorium%type)
+        is select auditorium, auditorium_capacity
+          from auditorium
+          where auditorium_capacity >=cap1 and AUDITORIUM_CAPACITY <= cap2;
+    begin
+      dbms_output.put_line('Вместимость <20 :');
+      for aum in cur(0,20)
+      loop dbms_output.put(aum.auditorium||' '); end loop;   
+      dbms_output.put_line(chr(10)||'Вместимость 20-30 :');
+      for aum in cur(21,30)
+      loop dbms_output.put(aum.auditorium||' '); end loop;    
+       dbms_output.put_line(chr(10)||'Вместимость 30-60 :');
+      for aum in cur(31,60)
+      loop dbms_output.put(aum.auditorium||' '); end loop;   
+       dbms_output.put_line(chr(10)||'Вместимость 60-80 :');
+      for aum in cur(61,80)
+      loop dbms_output.put(aum.auditorium||' '); end loop;  
+       dbms_output.put_line(chr(10)||'Вместимость выше 80 :');
+      for aum in cur(81,1000)
+      loop dbms_output.put(aum.auditorium||' '); end loop;  
+    end;
+--15. Создайте AБ. Объявите курсорную переменную с помощью системного типа refcursor. Продемонстрируйте ее применение для курсора c параметрами. 
+DECLARE
+    TYPE teacher_name IS REF CURSOR RETURN teacher%ROWTYPE;
+    xcurs teacher_name;
+BEGIN
+    OPEN xcurs FOR SELECT * FROM teacher;
+    :x := xcurs;
+END;
+BEGIN
+    dbms_output.put_line(:x);
+END;
+select * from teacher 
+--16. Создайте AБ. Продемонстрируйте понятие курсорный подзапрос?
+DECLARE
+    v_faculty_name FACULTY.FACULTY_NAME%TYPE;
+    v_pulpit_count NUMBER;
+BEGIN
+    -- Получаем имя факультета для FACULTY = 'FAC001'
+    SELECT FACULTY_NAME INTO v_faculty_name FROM FACULTY WHERE FACULTY = 'FAC001';
+    
+    -- Получаем количество кафедр, принадлежащих данному факультету, с помощью курсорного подзапроса
+    SELECT COUNT(*) INTO v_pulpit_count
+    FROM PULPIT
+    WHERE FACULTY = 'FAC001';
+    
+    -- Выводим результаты
+    DBMS_OUTPUT.PUT_LINE('Faculty: ' || v_faculty_name);
+    DBMS_OUTPUT.PUT_LINE('Number of pulpits: ' || v_pulpit_count);
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+
+--17. Создайте AБ. Уменьшите вместимость всех аудиторий (таблица AUDITORIUM) вместимостью от 40 до 80 на 10%. Используйте явный курсор с параметрами, цикл FOR, конструкцию UPDATE CURRENT OF. 
+DECLARE
+    CURSOR c_auditoriums IS
+        SELECT *
+        FROM AUDITORIUM
+        WHERE AUDITORIUM_CAPACITY BETWEEN 40 AND 80
+        FOR UPDATE;
+
+    v_auditorium AUDITORIUM%ROWTYPE;
+BEGIN
+    FOR v_auditorium IN c_auditoriums LOOP
+        UPDATE AUDITORIUM
+        SET AUDITORIUM_CAPACITY = AUDITORIUM_CAPACITY * 0.9
+        WHERE CURRENT OF c_auditoriums;
+        
+        COMMIT;
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+--18. Создайте AБ. Удалите все аудитории (таблица AUDITORIUM) вместимостью от 0 до 20. Используйте явный курсор с параметрами, цикл WHILE, конструкцию UPDATE CURRENT OF. 
+INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUDw002', 'Аудитория 2', 10, 'Type2');
+
+select * from AUDITORIUM
+
+DECLARE
+    CURSOR c_auditoriums IS
+        SELECT *
+        FROM AUDITORIUM
+        WHERE AUDITORIUM_CAPACITY BETWEEN 0 AND 20
+        FOR UPDATE;
+
+    v_auditorium AUDITORIUM%ROWTYPE;
+BEGIN
+    OPEN c_auditoriums;
+    LOOP
+        FETCH c_auditoriums INTO v_auditorium;
+        EXIT WHEN c_auditoriums%NOTFOUND;
+
+        DELETE FROM AUDITORIUM
+        WHERE CURRENT OF c_auditoriums;
+
+        COMMIT;
+    END LOOP;
+    CLOSE c_auditoriums;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+
+
+--19. Создайте AБ. Продемонстрируйте применение псевдостолбца ROWID в операторах UPDATE и DELETE. ------------
+
+DECLARE
+    v_rowid ROWID;
+BEGIN
+    -- Пример использования ROWID в операторе UPDATE
+    UPDATE AUDITORIUM
+    SET AUDITORIUM_CAPACITY = 55
+    WHERE ROWID = 'AAAR5ZAAEAAAAFnAAA';
+
+    -- Пример использования ROWID в операторе DELETE
+    v_rowid := 'AAAR5ZAAEAAAAFnAAA';
+    DELETE FROM AUDITORIUM
+    WHERE ROWID = v_rowid;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+
+
+--20. Распечатайте в одном цикле всех преподавателей (TEACHER), разделив группами по три (отделите группы линией -------------). 
+
+
+DECLARE
+  TYPE teacher_tab_type IS TABLE OF TEACHER.TEACHER%TYPE;
+  teacher_tab teacher_tab_type;
+  group_size CONSTANT INTEGER := 3;
+  group_count INTEGER := 0;
+BEGIN
+  SELECT TEACHER
+  BULK COLLECT INTO teacher_tab
+  FROM TEACHER;
+
+  FOR i IN 1..teacher_tab.COUNT LOOP
+    IF group_count = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('-------------');
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE(teacher_tab(i));
+
+    group_count := (group_count + 1) MOD group_size;
+  END LOOP;
+
+  DBMS_OUTPUT.PUT_LINE('-------------');
+END;

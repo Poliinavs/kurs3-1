@@ -1,0 +1,514 @@
+grant create view to Pol ;
+grant create any sequence to Pol ;
+grant select any sequence to Pol;
+grant create session to Pol;
+grant create cluster to Pol;
+grant create public synonym to Pol;
+grant create synonym to Pol;
+grant create materialized view to Pol;
+grant drop public synonym to Pol;
+alter user Pol quota unlimited on users;
+
+--
+create sequence Pol.S1
+    increment by 10
+    start with 1000
+    nomaxvalue
+    nominvalue
+    nocycle
+    nocache
+    noorder;
+  
+select S1.nextval from dual;
+    select S1.nextval from dual;
+  
+    select S1.currval from dual;
+    
+--3-4
+create sequence Pol.S2
+    increment by 10
+    start with 10
+    maxvalue 100
+    nocycle;
+    
+    select S2.nextval from dual;
+    
+    alter sequence S2 increment by 90;
+    select S2.nextval from dual;    --x2
+    alter sequence S2 increment by 10;
+    
+--5
+create sequence Pol.S3
+    increment by -10
+    start with 10
+    maxvalue 20
+    minvalue -100
+    nocycle
+    order;
+
+    select S3.nextval from dual;
+
+    alter sequence S3 increment by -90;
+    select S3.nextval from dual;
+    alter sequence S3 increment by -10;
+    
+    drop sequence Pol.S3
+
+--6
+create sequence Pol.S4
+    increment by 1
+    start with 1
+    maxvalue 4
+    cycle
+    cache 2
+    noorder;
+
+    select S4.nextval from dual;
+    
+--77.	Получите список всех последовательностей в словаре базы данных, владельцем которых является пользователь XXX.
+
+select * from sys.all_sequences where sequence_owner='APV';
+    
+    
+--88.	Создайте таблицу T1, имеющую столбцы N1, N2, N3, N4, типа NUMBER (20), кэшируемую и расположенную в буферном пуле KEEP. С помощью оператора
+--INSERT добавьте 7 строк, вводимое значение для столбцов должно формироваться с помощью последовательностей S1, S2, S3, S4.
+
+ create table T1 (
+    N1 number(20),
+    N2 number(20),
+    N3 number(20),
+    N4 number(20)
+    );
+    alter table T1 cache storage (buffer_pool keep);
+  
+    BEGIN
+        FOR i IN 1..7 LOOP
+        insert into T1(N1,N2,N3,N4) values (S1.currval, S2.currval, S3.currval, S4.currval);
+        END LOOP;
+    END;
+    
+    select * from T1;
+--9.	Создайте кластер ABC, имеющий hash-тип (размер 200) и содержащий 2 поля: X (NUMBER (10)), V (VARCHAR2(12)).
+
+ create cluster Pol.ABC
+    (
+        x number(10),
+        v varchar2(12)
+    )
+    hashkeys 200;
+
+
+
+--10.	Создайте таблицу A, имеющую столбцы XA (NUMBER (10)) и VA (VARCHAR2(12)), принадлежащие кластеру ABC, а также еще один произвольный столбец.
+--11.	Создайте таблицу B, имеющую столбцы XB (NUMBER (10)) и VB (VARCHAR2(12)), принадлежащие кластеру ABC, а также еще один произвольный столбец.
+--12.	Создайте таблицу С, имеющую столбцы XС (NUMBER (10)) и VС (VARCHAR2(12)), принадлежащие кластеру ABC, а также еще один произвольный столбец. 
+
+   create table A(XA number(10), VA varchar(12), CA char(10)) cluster Pol.ABC(XA,VA);
+    create table B(XB number(10), VB varchar(12), CB char(10)) cluster Pol.ABC(XB,VB);
+    create table C(XC number(10), VC varchar(12), CC char(10)) cluster Pol.ABC(XC,VC);
+
+INSERT INTO B (XB, VB, CB)
+VALUES (1, 'Зие1', 'C1');
+
+INSERT INTO B (XB, VB, CB)
+VALUES (2, '2', 'C2');
+
+-- Вставьте данные в таблицу C
+INSERT INTO C (XC, VC, CC)
+VALUES (3, 'Зие3', 'C3');
+
+INSERT INTO C (XC, VC, CC)
+VALUES (4, 'Зе4', 'C4');
+--13.	Найдите созданные таблицы и кластер в представлениях словаря Oracle.
+SELECT table_name
+FROM all_tables;
+select * from all_tables where cluster_name='ABC';  
+--14.	Создайте частный синоним для таблицы XXX.С и продемонстрируйте его применение.
+
+--15.	Создайте публичный синоним для таблицы XXX.B и продемонстрируйте его применение.
+ create synonym SS1 for Pol.C;
+    create public synonym SS2 for Pol.B;
+    
+    insert into 
+    select *from SS1;
+select *from SS2;
+--16.	Создайте две произвольные таблицы A и B (с первичным и внешним ключами), заполните их данными, создайте представление V1, основанное на SELECT... FOR A inner join B. Продемонстрируйте его работоспособность.
+ CREATE TABLE A (
+    X NUMBER(20) PRIMARY KEY
+);
+
+-- Создайте таблицу B со ссылкой на таблицу A
+CREATE TABLE B (
+    Y NUMBER(20),
+    CONSTRAINT fk_column FOREIGN KEY (Y) REFERENCES A(X)
+);
+
+Drop table A
+Drop table B
+INSERT INTO A (X) VALUES (1);
+INSERT INTO A (X) VALUES (2);
+INSERT INTO A (X) VALUES (3);
+
+-- Вставьте данные в таблицу B, используя значения, которые существуют в таблице A (ссылаясь на первичные ключи)
+INSERT INTO B (Y) VALUES (1); -- Ссылается на X=1 из таблицы A
+INSERT INTO B (Y) VALUES (2); -- Ссылается на X=2 из таблицы A
+INSERT INTO B (Y) VALUES (3); -- Ссылается на X=3 из таблицы A
+    
+    create view V1
+    as select X, Y from A inner join B on A.X=B.Y;
+    
+    select * from V1;
+      
+
+--17.	На основе таблиц A и B создайте материализованное представление MV, которое имеет периодичность обновления 2 минуты. Продемонстрируйте его работоспособность.
+
+
+ create materialized view MV
+    build immediate
+    refresh complete
+    start with sysdate
+    next sysdate + Interval '1' minute
+    as
+    select A.X, B.Y
+    from (select count(*) X from A) a,
+         (select count(*) Y from B) b
+    
+    select * from MV;--PDB_AP
+CREATE TABLE FACULTY
+  (
+   FACULTY      VARCHAR(30)      NOT NULL,
+   FACULTY_NAME VARCHAR2(80), 
+   CONSTRAINT PK_FACULTY PRIMARY KEY(FACULTY) 
+  );
+  
+
+CREATE TABLE PULPIT 
+(
+ PULPIT       VARCHAR(30)      NOT NULL,
+ PULPIT_NAME  VARCHAR2(100), 
+ FACULTY      VARCHAR(40)      NOT NULL, 
+ CONSTRAINT FK_PULPIT_FACULTY FOREIGN KEY(FACULTY)   REFERENCES FACULTY(FACULTY), 
+ CONSTRAINT PK_PULPIT PRIMARY KEY(PULPIT) 
+ ); 
+ 
+ 
+ CREATE TABLE TEACHER
+ ( 
+  TEACHER       VARCHAR(40) NOT  NULL,
+  TEACHER_NAME  VARCHAR2(70), 
+  PULPIT        VARCHAR(40) NOT NULL, 
+  BIRTHDAY      DATE,
+  SALARY        NUMBER(5),
+  CONSTRAINT PK_TEACHER  PRIMARY KEY(TEACHER), 
+  CONSTRAINT FK_TEACHER_PULPIT FOREIGN   KEY(PULPIT)   REFERENCES PULPIT(PULPIT)
+ ) ;
+ CREATE TABLE SUBJECT
+    (
+     SUBJECT      VARCHAR(40)     NOT NULL, 
+     SUBJECT_NAME VARCHAR2(70)  NOT NULL,
+     PULPIT       VARCHAR(40)     NOT NULL,  
+     CONSTRAINT PK_SUBJECT PRIMARY KEY(SUBJECT),
+     CONSTRAINT FK_SUBJECT_PULPIT FOREIGN  KEY(PULPIT)  REFERENCES PULPIT(PULPIT)
+    );
+create table AUDITORIUM_TYPE 
+(
+  AUDITORIUM_TYPE   varchar(30) constraint AUDITORIUM_TYPE_PK  primary key,  
+  AUDITORIUM_TYPENAME  varchar2(50) constraint AUDITORIUM_TYPENAME_NOT_NULL not null         
+);
+ 
+ 
+create table AUDITORIUM 
+(
+ AUDITORIUM           varchar(40) primary key,  
+ AUDITORIUM_NAME      varchar2(200),      
+ AUDITORIUM_CAPACITY  number(4),          
+ AUDITORIUM_TYPE      varchar(40) not null     
+                      references AUDITORIUM_TYPE(AUDITORIUM_TYPE)  
+);
+
+ -- Вставка данных в таблицу FACULTY
+INSERT INTO FACULTY (FACULTY, FACULTY_NAME)
+VALUES ('FAC001', 'Faculty of Science');
+
+INSERT INTO FACULTY (FACULTY, FACULTY_NAME)
+VALUES ('FAC002', 'Faculty of Arts');
+
+-- Вставка данных в таблицу PULPIT
+INSERT INTO PULPIT (PULPIT, PULPIT_NAME, FACULTY)
+VALUES ('PUL001', 'Pulpit of Physics', 'FAC001');
+
+INSERT INTO PULPIT (PULPIT, PULPIT_NAME, FACULTY)
+VALUES ('PUL002', 'Pulpit of History', 'FAC002');
+
+-- Вставка данных в таблицу TEACHER
+INSERT INTO TEACHER (TEACHER, TEACHER_NAME, PULPIT, BIRTHDAY, SALARY)
+VALUES ('TCH001', 'John Smith', 'PUL001', TO_DATE('1980-01-15', 'yyyy-mm-dd'), 5000);
+
+INSERT INTO TEACHER (TEACHER, TEACHER_NAME, PULPIT, BIRTHDAY, SALARY)
+VALUES ('TCH002', 'Alice Johnson', 'PUL002', TO_DATE('1985-03-20', 'yyyy-mm-dd'), 5500);
+
+-- Вставка данных в таблицу SUBJECT
+INSERT INTO SUBJECT (SUBJECT, SUBJECT_NAME, PULPIT)
+VALUES ('SUB001', 'Physics 101', 'PUL001');
+
+INSERT INTO SUBJECT (SUBJECT, SUBJECT_NAME, PULPIT)
+VALUES ('SUB002', 'History 101', 'PUL002');
+
+-- Вставка данных в таблицу AUDITORIUM_TYPE
+INSERT INTO AUDITORIUM_TYPE (AUDITORIUM_TYPE, AUDITORIUM_TYPENAME)
+VALUES ('Type1', 'Lecture Hall');
+
+INSERT INTO AUDITORIUM_TYPE (AUDITORIUM_TYPE, AUDITORIUM_TYPENAME)
+VALUES ('Type2', 'Classroom');
+
+-- Вставка данных в таблицу AUDITORIUM
+INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD001', 'Lecture Hall 101', 100, 'Type1');
+
+INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD002', 'Classroom A', 30, 'Type2');
+
+-- Продолжение вставки данных в таблицы
+
+-- Вставка данных в таблицу FACULTY
+INSERT INTO FACULTY (FACULTY, FACULTY_NAME)
+VALUES ('FAC003', 'Faculty of Engineering');
+
+-- Вставка данных в таблицу PULPIT
+INSERT INTO PULPIT (PULPIT, PULPIT_NAME, FACULTY)
+VALUES ('PUL003', 'Pulpit of Computer Science', 'FAC003');
+
+-- Вставка данных в таблицу TEACHER
+INSERT INTO TEACHER (TEACHER, TEACHER_NAME, PULPIT, BIRTHDAY, SALARY)
+VALUES ('TCH003', 'Mary Brown', 'PUL003', TO_DATE('1987-07-10', 'yyyy-mm-dd'), 6000);
+
+-- Вставка данных в таблицу SUBJECT
+INSERT INTO SUBJECT (SUBJECT, SUBJECT_NAME, PULPIT)
+VALUES ('SUB003', 'Introduction to Programming', 'PUL003');
+
+-- Вставка данных в таблицу AUDITORIUM_TYPE
+INSERT INTO AUDITORIUM_TYPE (AUDITORIUM_TYPE, AUDITORIUM_TYPENAME)
+VALUES ('Type3', 'Laboratory');
+
+-- Вставка данных в таблицу AUDITORIUM
+INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD003', 'Laboratory 101', 40, 'Type3');
+-- Продолжение вставки данных в таблицы
+
+-- Вставка данных в таблицу FACULTY
+INSERT INTO FACULTY (FACULTY, FACULTY_NAME)
+VALUES ('FAC004', 'Faculty of Business Administration');
+
+-- Вставка данных в таблицу PULPIT
+INSERT INTO PULPIT (PULPIT, PULPIT_NAME, FACULTY)
+VALUES ('PUL004', 'Pulpit of Finance', 'FAC004');
+
+-- Вставка данных в таблицу TEACHER
+INSERT INTO TEACHER (TEACHER, TEACHER_NAME, PULPIT, BIRTHDAY, SALARY)
+VALUES ('TCH004', 'David Johnson', 'PUL004', TO_DATE('1983-05-25', 'yyyy-mm-dd'), 6200);
+
+-- Вставка данных в таблицу SUBJECT
+INSERT INTO SUBJECT (SUBJECT, SUBJECT_NAME, PULPIT)
+VALUES ('SUB004', 'Financial Management', 'PUL004');
+
+-- Вставка данных в таблицу AUDITORIUM_TYPE
+INSERT INTO AUDITORIUM_TYPE (AUDITORIUM_TYPE, AUDITORIUM_TYPENAME)
+VALUES ('Type4', 'Conference Room');
+
+-- Вставка данных в таблицу AUDITORIUM
+INSERT INTO AUDITORIUM (AUDITORIUM, AUDITORIUM_NAME, AUDITORIUM_CAPACITY, AUDITORIUM_TYPE)
+VALUES ('AUD004', 'Conference Room 201', 80, 'Type4');
+--1
+--1.	Разработайте простейший анонимный блок PL/SQL (АБ), не содержащий операторов. 
+
+begin
+        null;
+    end;
+
+--2.	Разработайте АБ, выводящий «Hello World!». Выполните его в SQLDev и SQL+.
+  begin
+        dbms_output.put_line('Hello, world');
+    end;
+--3.	Продемонстрируйте работу исключения и встроенных функций sqlerrm, sqlcode.
+
+  declare
+        x number(3) := 1;
+        y number(3) := 0;
+        z number;
+    begin
+        z:=x/y;
+        exception when others
+           then dbms_output.put_line(sqlcode||': error = '||sqlerrm);
+    end;
+--4.	Разработайте вложенный блок. Продемонстрируйте принцип обработки исключений во вложенных блоках.
+DECLARE
+   x NUMBER(3) := 1;
+   z NUMBER;
+BEGIN
+  DECLARE
+    y NUMBER(3) := 0; -- Зададим y равным 0, чтобы вызвать исключение
+  BEGIN
+    BEGIN
+      z := x / y; -- Попытка деления на ноль
+      DBMS_OUTPUT.PUT_LINE('y = ' || y);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Exception in inner block: ' || SQLERRM);
+    END;
+  END;
+
+  DBMS_OUTPUT.PUT_LINE('x = ' || x);
+END;
+
+
+
+
+--5.	Выясните, какие типы предупреждения компилятора поддерживаются в данный момент.
+   alter system set plsql_warnings = 'ENABLE:INFORMATIONAL';
+    select name, value from v$parameter where name = 'plsql_warnings';
+--6.	Разработайте скрипт, позволяющий просмотреть все спецсимволы PL/SQL.
+  select keyword from v$reserved_words
+        where length = 1 and keyword != 'A';
+--7.	Разработайте скрипт, позволяющий просмотреть все ключевые слова  PL/SQL.
+select keyword from v$reserved_words
+        where length > 1 and keyword!='A' order by keyword;
+--8.	Разработайте скрипт, позволяющий просмотреть все параметры Oracle Server, связанные с PL/SQL. Просмотрите эти же параметры с помощью SQL+-команды show.
+    select name,value from v$parameter
+        where name like 'plsql%';
+--9.	Разработайте анонимный блок, демонстрирующий (выводящий в выходной серверный поток результаты):
+
+--10.	объявление и инициализацию целых number-переменных;
+--11.	арифметические действия над двумя целыми number-переменных, включая деление с остатком;
+--12.	объявление и инициализацию number-переменных с фиксированной точкой;
+--13.	объявление и инициализацию number-переменных с фиксированной точкой и отрицательным масштабом (округление);
+--14.	объявление и инициализацию BINARY_FLOAT-переменной;
+--15.	объявление и инициализацию BINARY_DOUBLE-переменной;
+--16.	объявление number-переменных с точкой и применением символа E (степень 10) при инициализации/присвоении;
+--17.	объявление и инициализацию BOOLEAN-переменных. 
+DECLARE
+    c1 NUMBER(3)        := 30;
+    c2 NUMBER(3)        := 12;
+    div NUMBER(10,2);
+    fix NUMBER(10,2)    := 4.56;
+    otr NUMBER(4, -5)   := 45.67890;
+    en NUMBER(32,10)    := 54321E-10;
+    bf BINARY_FLOAT     := 987654321.98765432111;
+    bd BINARY_DOUBLE    := 987654321.98765432111;
+    b1 BOOLEAN          := FALSE;
+    
+BEGIN
+    div := MOD(c1, c2);
+    DBMS_OUTPUT.PUT_LINE('c1 = ' || c1);
+    DBMS_OUTPUT.PUT_LINE('c2 = ' || c2);
+    DBMS_OUTPUT.PUT_LINE('c1 % c2 = ' || div);
+    
+    DBMS_OUTPUT.PUT_LINE('fix = ' || fix);
+    DBMS_OUTPUT.PUT_LINE('otr = ' || otr);
+    DBMS_OUTPUT.PUT_LINE('en = ' || en);
+    DBMS_OUTPUT.PUT_LINE('bf = ' || bf);
+    DBMS_OUTPUT.PUT_LINE('bd = ' || bd);
+    
+    IF NOT b1 THEN
+        DBMS_OUTPUT.PUT_LINE('b1 = ' || 'false');
+    END IF;
+END;
+
+
+--18.	Разработайте анонимный блок PL/SQL содержащий объявление констант (VARCHAR2, CHAR, NUMBER). Продемонстрируйте  возможные операции константами.  
+ DECLARE
+    n1 CONSTANT NUMBER(5) := 4;
+    vc CONSTANT VARCHAR2(25) := 'Hello BD';
+    c CONSTANT CHAR(7) := 'Anna';
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('vc = ' || vc);
+    DBMS_OUTPUT.PUT_LINE('n1 = ' || n1);
+    DBMS_OUTPUT.PUT_LINE('c = ' || c);
+
+    -- Попытка изменения значения константы (нельзя менять константы)
+    n1 := 10;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+--19.	Разработайте АБ, содержащий объявления с опцией %TYPE. Продемонстрируйте действие опции.
+   declare
+        name varchar(25) := 'Anna';
+        surname name%TYPE := 'Igor';
+        x  dual%ROWTYPE;
+    begin
+        select 'A' into x from dual;
+        dbms_output.put_line('name = '||name);
+        dbms_output.put_line(x.dummy);
+    end;
+--20.	Разработайте АБ, содержащий объявления с опцией %ROWTYPE. Продемонстрируйте действие опции.
+
+--21.	Разработайте АБ, демонстрирующий все возможные конструкции оператора IF .
+--22.	Разработайте АБ, демонстрирующий все возможные конструкции оператора IF .
+DECLARE
+    x NUMBER := 10;
+BEGIN
+    IF x > 5 THEN
+        DBMS_OUTPUT.PUT_LINE('x больше 5');
+    ELSIF x = 5 THEN
+        DBMS_OUTPUT.PUT_LINE('x равно 5');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('x меньше 5');
+    END IF;
+END;
+
+--23.	Разработайте АБ, демонстрирующий работу оператора CASE.
+DECLARE
+    grade CHAR := 'B';
+BEGIN
+    CASE grade
+        WHEN 'A' THEN
+            DBMS_OUTPUT.PUT_LINE('Отлично');
+        WHEN 'B' THEN
+            DBMS_OUTPUT.PUT_LINE('Хорошо');
+        WHEN 'C' THEN
+            DBMS_OUTPUT.PUT_LINE('Удовлетворительно');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Неизвестная оценка');
+    END CASE;
+END;
+--24.	Разработайте АБ, демонстрирующий работу оператора LOOP.
+DECLARE
+    i NUMBER := 1;
+BEGIN
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Итерация ' || i);
+        i := i + 1;
+        EXIT WHEN i > 5;
+    END LOOP;
+END;
+
+--25.	Разработайте АБ, демонстрирующий работу оператора WHILE.
+DECLARE
+    i NUMBER := 1;
+BEGIN
+    WHILE i <= 5 LOOP
+        DBMS_OUTPUT.PUT_LINE('Итерация ' || i);
+        i := i + 1;
+    END LOOP;
+END;
+
+--26.	Разработайте АБ, демонстрирующий работу оператора FOR.
+
+
+DECLARE
+    n NUMBER;
+BEGIN
+    FOR i IN 1..5 LOOP
+        n := i * 2; 
+        DBMS_OUTPUT.PUT_LINE('Значение i: ' || i);
+        DBMS_OUTPUT.PUT_LINE('Результат: ' || n);
+    END LOOP;
+END;
+
+ 
+ 
+ 
+    insert into A(X) values (8);
+    
+    drop materialized view MV;
+
