@@ -38,7 +38,6 @@ const server = http.createServer((req, res) => {
             console.log(sender);
 
 
-            const password = 'teddy.174'; // Ваш пароль
 
             const transporter = nodemailer.createTransport({
                 host: 'smtp.office365.com',                                                           // Сервер SMTP Outlook
@@ -86,7 +85,6 @@ const server = http.createServer((req, res) => {
                 secure: false,
                 auth: {
                     user: sender, // Замените на свой Gmail адрес
-                    pass: "Pol_Kap6607860!" // Замените на пароль от вашего Gmail аккаунта
                 }
             });
 
