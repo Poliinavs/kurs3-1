@@ -1,0 +1,13 @@
+STR(0)
+2.Daria
+STR(5)
+3.Sasha
+STR(7)
+STR(5)
+4.Igor
+STR(7)
+STR(7)
+5.Roma
+7.Nikita
+8.Olga
+9.Alex

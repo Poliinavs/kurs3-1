@@ -1,0 +1,7 @@
+----6
+cat /proc/PID/maps
+pmap PID
+objdump -f ./os06_06
+
+----7
+pmap PID
