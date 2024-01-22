@@ -1,0 +1,244 @@
+--1.	Создайте таблицу, имеющую несколько атрибутов, один из которых первичный ключ.
+-- Создание таблицы
+SELECT username
+FROM dba_users;
+CREATE TABLE POL.my_table (
+    id NUMBER PRIMARY KEY,
+    a NUMBER,
+    b VARCHAR2(10)
+);
+
+-- Блок PL/SQL для вставки данных
+DECLARE
+    i NUMBER := 0;
+BEGIN
+    FOR i IN 0..9 LOOP
+        INSERT INTO POL.my_table (id, a, b)
+        VALUES (i, i, 'adhdjsj');
+    END LOOP;
+    COMMIT;
+END;
+/
+drop table my_table
+    SELECT * FROM POL.my_table;
+--2.	Заполните таблицу строками (10 шт.).
+
+--3.	Создайте BEFORE – триггер уровня оператора на события INSERT, DELETE и UPDATE. 
+CREATE OR REPLACE TRIGGER my_table_trigger
+BEFORE INSERT OR DELETE OR UPDATE ON POL.my_table
+FOR EACH ROW
+DECLARE
+    operation VARCHAR2(10);
+BEGIN
+    -- Определение типа операции
+    IF INSERTING THEN
+        operation := 'INSERT';
+    ELSIF DELETING THEN
+        operation := 'DELETE';
+    ELSIF UPDATING THEN
+        operation := 'UPDATE';
+    END IF;
+
+    -- Вывод информации о событии
+    DBMS_OUTPUT.PUT_LINE('Trigger activated for ' || operation || ' on my_table');
+
+
+END;
+
+--4.	Этот и все последующие триггеры должны выдавать сообщение на серверную консоль (DMS_OUTPUT) со своим собственным именем. 
+--5.	Создайте BEFORE-триггер уровня строки на события INSERT, DELETE и UPDATE.
+CREATE OR REPLACE TRIGGER my_table_before_row_trigger
+BEFORE INSERT OR DELETE OR UPDATE ON POL.my_table
+FOR EACH ROW
+BEGIN
+  -- Checking if it's an INSERT operation
+  IF INSERTING THEN
+    DBMS_OUTPUT.PUT_LINE('Trigger: BEFORE INSERT');
+    -- Your logic for BEFORE INSERT goes here
+
+  -- Checking if it's a DELETE operation
+  ELSIF DELETING THEN
+    DBMS_OUTPUT.PUT_LINE('Trigger: BEFORE DELETE');
+    -- Your logic for BEFORE DELETE goes here
+
+  -- Checking if it's an UPDATE operation
+  ELSIF UPDATING THEN
+    DBMS_OUTPUT.PUT_LINE('Trigger: BEFORE UPDATE');
+    -- Your logic for BEFORE UPDATE goes here
+  END IF;
+END;
+--6.	Примените предикаты INSERTING, UPDATING и DELETING.
+--7.	Разработайте AFTER-триггеры уровня оператора на события INSERT, DELETE и UPDATE.
+CREATE OR REPLACE TRIGGER after_insert_statement_trigger
+AFTER INSERT ON POL.my_table
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER INSERT (Statement-level)');
+  -- Your logic for AFTER INSERT (Statement-level) goes here
+END;
+/
+
+-- AFTER DELETE statement-level trigger
+CREATE OR REPLACE TRIGGER after_delete_statement_trigger
+AFTER DELETE ON POL.my_table
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER DELETE (Statement-level)');
+  -- Your logic for AFTER DELETE (Statement-level) goes here
+END;
+/
+
+-- AFTER UPDATE statement-level trigger
+CREATE OR REPLACE TRIGGER after_update_statement_trigger
+AFTER UPDATE ON POL.my_table
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER UPDATE (Statement-level)');
+  -- Your logic for AFTER UPDATE (Statement-level) goes here
+END;
+--8.	Разработайте AFTER-триггеры уровня строки на события INSERT, DELETE и UPDATE.
+-- AFTER INSERT row-level trigger
+CREATE OR REPLACE TRIGGER after_insert_row_trigger
+AFTER INSERT ON POL.my_table
+FOR EACH ROW
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER INSERT (Row-level)');
+  -- Your logic for AFTER INSERT (Row-level) goes here
+END;
+/
+
+-- AFTER DELETE row-level trigger
+CREATE OR REPLACE TRIGGER after_delete_row_trigger
+AFTER DELETE ON POL.my_table
+FOR EACH ROW
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER DELETE (Row-level)');
+  -- Your logic for AFTER DELETE (Row-level) goes here
+END;
+/
+
+-- AFTER UPDATE row-level trigger
+CREATE OR REPLACE TRIGGER after_update_row_trigger
+AFTER UPDATE ON POL.my_table
+FOR EACH ROW
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Trigger: AFTER UPDATE (Row-level)');
+  -- Your logic for AFTER UPDATE (Row-level) goes here
+END;
+/
+--9.	Создайте таблицу с именем AUDIT. Таблица должна содержать поля: OperationDate, 
+  create table POL.AUDITS(
+        OperationDate date,         --('DD-MM-YYYY  HH24:MI:SS'),
+        OperationType varchar2(40), --i.d.u.
+        TriggerName varchar2(40),
+        Data varchar2(40)           --знач полей до и после операции
+        );
+--OperationType (операция вставки, обновления и удаления),
+
+--TriggerName(имя триггера),
+--Data (строка с значениями полей до и после операции).
+CREATE OR REPLACE TRIGGER AUDITS_trigger_before
+    BEFORE INSERT OR UPDATE OR DELETE ON POL.my_table
+BEGIN
+    IF INSERTING THEN
+        DBMS_OUTPUT.PUT_LINE('before_insert_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Insert', 'AUDITS_trigger_before', a || b
+        FROM POL.my_table;
+    ELSIF UPDATING THEN
+        DBMS_OUTPUT.PUT_LINE('before_update_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Update', 'AUDITS_trigger_before', a || b
+        FROM POL.my_table;
+    ELSIF DELETING THEN
+        DBMS_OUTPUT.PUT_LINE('before_delete_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Delete', 'AUDITS_trigger_before', a || b
+        FROM POL.my_table;
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER AUDITS_trigger_after
+    AFTER INSERT OR UPDATE OR DELETE ON POL.my_table
+BEGIN
+    IF INSERTING THEN
+        DBMS_OUTPUT.PUT_LINE('after_insert_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Insert', 'AUDITS_trigger_after', a || b
+        FROM POL.my_table;
+    ELSIF UPDATING THEN
+        DBMS_OUTPUT.PUT_LINE('after_update_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Update', 'AUDITS_trigger_after', a || b
+        FROM POL.my_table;
+    ELSIF DELETING THEN
+        DBMS_OUTPUT.PUT_LINE('after_delete_AUDITS');
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        SELECT SYSDATE, 'Delete', 'AUDITS_trigger_after', a || b
+        FROM POL.my_table;
+    END IF;
+END;
+/
+
+------------------------------------------------
+INSERT INTO POL.my_table (id, a, b) VALUES (12, 10, 'A');
+
+-- Displaying data from POL.my_table
+SELECT * FROM POL.my_table;
+
+-- Displaying data from POL.AUDITS
+SELECT * FROM POL.AUDITS;
+
+
+
+-- Deleting a row from POL.my_table
+DELETE FROM POL.my_table WHERE id = 12;
+
+-- Displaying data from POL.AUDITS after delete operation
+SELECT * FROM POL.AUDITS;
+
+-- Cleaning up the data in POL.AUDITS (delete all rows)
+DELETE FROM POL.AUDITS;
+
+-- Displaying the status of triggers
+SELECT object_name, status FROM user_objects WHERE object_type = 'TRIGGER';
+
+--10.	Измените триггеры таким образом, чтобы они регистрировали все операции с исходной таблицей в таблице AUDIT.
+CREATE OR REPLACE TRIGGER AUDITS_trigger_before_row
+BEFORE INSERT OR UPDATE OR DELETE ON POL.my_table
+FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        VALUES (SYSDATE, 'Insert', 'AUDITS_trigger_before_row', :NEW.a || ' ' || :NEW.b);
+    ELSIF UPDATING THEN
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        VALUES (SYSDATE, 'Update', 'AUDITS_trigger_before_row', :OLD.a || ' ' || :OLD.b || ' -> ' || :NEW.a || ' ' || :NEW.b);
+    ELSIF DELETING THEN
+        INSERT INTO POL.AUDITS(OperationDate, OperationType, TriggerName, Data)
+        VALUES (SYSDATE, 'Delete', 'AUDITS_trigger_before_row', :OLD.a || ' ' || :OLD.b);
+    END IF;
+END;
+/
+--11.	Выполните операцию, нарушающую целостность таблицы по первичному ключу. Выясните, зарегистрировал ли триггер это событие. Объясните результат.
+
+INSERT INTO POL.my_table (id, a, b) VALUES (1, 10, 'A');
+
+--12.	Удалите (drop) исходную таблицу. Объясните результат. Добавьте триггер, запрещающий удаление исходной таблицы.
+CREATE OR REPLACE TRIGGER prevent_drop_table
+BEFORE DROP ON DATABASE
+DECLARE
+    v_object_name VARCHAR2(30);
+BEGIN
+    -- Check the object being dropped
+    SELECT OBJECT_NAME INTO v_object_name FROM USER_OBJECTS WHERE OBJECT_NAME = 'MY_TABLE' AND OBJECT_TYPE = 'TABLE';
+
+    IF v_object_name IS NOT NULL THEN
+        -- Prevent dropping the specified table
+        RAISE_APPLICATION_ERROR(-20001, 'Dropping POL.my_table is not allowed.');
+    END IF;
+END;
+
+Drop table POL.my_table
+--14.	Создайте представление над исходной таблицей. Разработайте INSTEADOF INSERT-триггер. Триггер должен добавлять строку в таблицу.
+CREATE OR REPLACE VIEW my_table_view AS
+SELECT * FROM POL.my_table;
+

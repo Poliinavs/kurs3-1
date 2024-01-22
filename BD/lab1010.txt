@@ -1,0 +1,17 @@
+DECLARE
+  xcurs SYS_REFCURSOR;
+  v_teacher TEACHER%ROWTYPE; -- Assuming 'TEACHER' is the name of your table
+BEGIN
+  OPEN xcurs FOR SELECT * FROM TEACHER;
+  
+  LOOP
+    FETCH xcurs INTO v_teacher;
+    EXIT WHEN xcurs%NOTFOUND;
+
+    -- Print or do something with the fetched data
+    DBMS_OUTPUT.PUT_LINE('Teacher ID: ' || v_teacher.TEACHER || ', Name: ' || v_teacher.TEACHER_NAME);
+  END LOOP;
+
+  CLOSE xcurs;
+END;
+/
